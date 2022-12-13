@@ -7,31 +7,29 @@ import { cy, headless } from './setup.js';
 var layout_params = {};
 var layout = {};
 
-const default_size = 15;
-
 const node_edge_style = [ // the stylesheet for the graph
     {
         selector: 'node',
         style: {
             'background-color': function (node) {
-                return colorNode(node)
+                return node_properties(node).color;
             },
-            'font-size': '10px',
+            'font-size': '25px',
             'font-style': 'normal',
-            'text-wrap': 'ellipsis',
+            // 'text-wrap': 'ellipsis',
             'text-max-width': '75px',
             'label': function (node) {
-                return labelNode(node)
+                return node_properties(node).label;
             },
             'width': function (node) {
-                return widthNode(node)
+                return node_properties(node).width;
             },
             'height': function (node) {
-                return heightNode(node)
+                return node_properties(node).height;
             }
             ,
             'shape': function (node) {
-                return shapeNode(node)
+                return node_properties(node).shape;
             }
         }
     },
@@ -40,16 +38,19 @@ const node_edge_style = [ // the stylesheet for the graph
         selector: 'edge',
         style: {
             'width': function (ele) {
-                return ele.data('weight')
+                return edge_properties(ele).width;
             },
             'label': function (ele) {
-                return ele.data('action')
+                return edge_properties(ele).label;
             },
             'font-size': '10px',
             'font-style': 'oblique',
-            'color': '#ccc',
-            'line-color': '#ccc',
-            'target-arrow-color': '#ccc',
+            'line-color': function (ele) {
+                return edge_properties(ele).line_color;
+            },
+            'target-arrow-color': function (ele) {
+                return edge_properties(ele).target_arrow_color;
+            },
             'target-arrow-shape': 'triangle',
             'curve-style': 'bezier'
         }
@@ -64,7 +65,7 @@ export var params_cola = {
     randomize: false,
     maxSimulationTime: 3000
 };
-var param_elk = {
+const param_elk = {
     nodeDimensionsIncludeLabels: false, // Boolean which changes whether label dimensions are included when calculating node dimensions
     fit: true, // Whether to fit
     padding: 20, // Padding on fit
@@ -88,7 +89,7 @@ var param_elk = {
     priority: function (edge) { return null; }, // Edges with a non-nil value are skipped when geedy edge cycle breaking is enabled
 };
 
-var param_cise = {
+const param_cise = {
     // -------- Mandatory parameters --------
     name: 'cise',
 
@@ -161,7 +162,7 @@ var param_cise = {
     stop: function () { }, // on layoutstop
 };
 
-var param_fcose = {
+const param_fcose = {
 
     name: 'fcose',
     // 'draft', 'default' or 'proof' 
@@ -234,7 +235,7 @@ var param_fcose = {
     stop: () => { } // on layoutstop
 };
 
-var params_cose = {
+const params_cose = {
     name: 'cose',
 
     // Called on `layoutready`
@@ -317,60 +318,99 @@ var params_cose = {
     minTemp: 1.0
 };
 
+const param_brefi = {
+    name: 'breadthfirst',
+    directed: true,
+    padding: 10
+  };
 
-export function removeSpinner() {
-    var el = document.getElementById('spinnerDiv');
-    el.remove();
-}
 
-export function type_switch(type) {
-    let ret;
-    switch (type) {
+export function node_properties(node) {
+    // # Hexadecimal color specification 
+    // brewer.pal(n = 8, name = "Dark2")
+    // https://www.datanovia.com/en/wp-content/uploads/dn-tutorials/ggplot2/figures/029-r-color-palettes-display-rcolorbrewer-single-palette-1.png
+    // "#1B9E77" "#D95F02" "#7570B3" "#E7298A" "#66A61E" "#E6AB02" "#A6761D" "#666666"
+    let prop;
+    let color;
+    switch (node.data('type')) {
         case 'EconomicResource':
-            ret = 0;
+            prop = {
+                color: '#8980F5',
+                label : node.data('name') || "",
+                shape : 'ellipse',
+                width : 40,
+                height : 40,
+                tooltip : {
+                    'label': node.data('name')
+                },
+            }
             break;
         case 'EconomicEvent':
-            ret = 1;
+            switch (node.data('name')) {
+                case 'transfer':
+                    color = '#D6D6D6';
+                break;
+                case 'transferCustody':
+                    color = '#D6D6D6';
+                break;
+                case 'transferAllRights':
+                    color = '#D6D6D6';
+                break;
+                default:
+                    color = '#FFEEDD';
+            }    
+            prop = {
+                color: color,
+                label : node.data('name') || "",
+                shape : 'rectangle',
+                width : 40,
+                height : 40,
+                tooltip : {
+                    'label': node.data('name')
+                },
+            }
             break;
         case 'Process':
-            ret = 2;
+            prop = {
+                color: '#21897E',
+                label : node.data('name') || "",
+                shape : 'diamond',
+                width : 40,
+                height : 40,
+                tooltip : {
+                    'label': node.data('name')
+                },
+            }
             break;
         case 'EconomicAgent':
-            ret = 3;
-            break;
-        case 'entity':
-            ret = 4;
+            prop = {
+                color: '#000000',
+                label : node.data('name') || "",
+                shape : 'triangle',
+                width : 40,
+                height : 40,
+                tooltip : {
+                    'label': node.data('name')
+                },
+            }
             break;
         default:
             throw new Error('type is not defined: ' + type);
-        // ret = -1;
     }
-    return (ret);
+    return(prop);
 }
 
-export function classification_switch(classification) {
-    if (classification === undefined){
-        return(0);
+export function edge_properties(edge){
+    let prop = {
+        line_color : '#000000',
+        target_arrow_color: '#000000',
+        label : edge.data('name') || "",
+        width : 3,
+        tooltip : {
+            'label': edge.data('name') || "",
+        },
     }
-    let ret;
-    switch (classification) {
-        case '5g_corona_conspiracy':
-            ret = 0;
-            break;
-        case 'non_conspiracy':
-            ret = 1;
-            break;
-        case 'other_conspiracy':
-            ret = 2;
-            break;
-        case 'None':
-            ret = 3;
-            break;
-        default:
-            throw new Error('Classification is not defined: ' + classification);
-        // ret = -1;
-    }
-    return (ret);
+    return(prop);
 }
 
 export function applyStyle() {
@@ -379,117 +419,6 @@ export function applyStyle() {
         .update();
 }
 
-function colorNode(node) {
-    // # Hexadecimal color specification 
-    // brewer.pal(n = 8, name = "Dark2")
-    // https://www.datanovia.com/en/wp-content/uploads/dn-tutorials/ggplot2/figures/029-r-color-palettes-display-rcolorbrewer-single-palette-1.png
-    // "#1B9E77" "#D95F02" "#7570B3" "#E7298A" "#66A61E" "#E6AB02" "#A6761D" "#666666"
-    var colorNodeArray = [
-        {
-            type: 'hashtag',
-            color: '#66A61E'
-        },
-        {
-            type: 'tweet',
-            color: 'rgb(140, 162, 82)'
-        },
-
-        {
-            type: 'url',
-            color: '#D95F02'
-        },
-        {
-            type: 'user',
-            color: '#E6AB02'
-        },
-        {
-            type: 'entity',
-            color: '#66A61E'
-        },
-    ];
-    var colorClassificationTweet = [
-        {
-            color: '#607466',
-            classification: '5g_corona_conspiracy'
-        },
-        {
-            color: '#aedcc0',
-            classification: 'non_conspiracy'
-        },
-        {
-            color: '#008cc6',
-            classification: 'other_conspiracy'
-        },
-        {
-            color: '#E7298A',
-            classification: 'None'
-        }
-    ];
-    var index = type_switch(node.data('type'));
-
-    var col = {};
-    if (index == 1) {
-        col = colorClassificationTweet[classification_switch(node.data('classification'))].color;
-    } else {
-        col = colorNodeArray[index].color;
-    }
-
-    return (col);
-}
-
-function labelNode(node) {
-
-    var labels = [
-        node.data('name') || "",
-        "", //node.data('text') || "No tweet text",
-        node.data('name') || "",
-        node.data('name') || "",
-        node.data('name') || "",
-    ];
-    
-    // console.log(type_switch(node.data('type')))
-    let label = labels[type_switch(node.data('type'))]
-    // label = label.substring(0, Math.min(label_limit, label.length));
-    return label;
-}
-
-function widthNode(node) {
-    const a = node.data('type');
-    var sizes = [
-        default_size,
-        Math.max(node.data('followers_count') + node.data('favorite_count'), default_size) || default_size,
-        default_size,
-        Math.max(node.data('followers_count') + node.data('friends_count'), default_size) || default_size
-    ];
-    return default_size;
-}
-
-function heightNode(node) {
-    const a = node.data('type');
-    var sizes = [
-        default_size,
-        Math.max(node.data('followers_count') + node.data('favorite_count'), default_size) || default_size,
-        default_size,
-        Math.max(node.data('followers_count') + node.data('friends_count'), default_size) || default_size
-    ];
-    return default_size;
-}
-
-function shapeNode(node) {
-    // ellipse triangle round-triangle rectangle round-rectangle bottom-round-rectangle cut-rectangle barrel rhomboid diamond round-diamond
-    // pentagon round-pentagon hexagon round-hexagon concave-hexagon heptagon round-heptagon octagon round-octagon star tag round-tag
-    // vee polygon (custom polygon specified via shape-polygon-points).
-    var shapesArray = [
-        'triangle', // hashtag
-        'ellipse', // tweet
-        'diamond', // url
-        'rectangle', // user
-        'triangle', // entity
-    ];
-    var shape = shapesArray[type_switch(node.data('type'))];
-    return (shape);
-    // return( 'ellipse' );
-}
 
 var is_running = false;
 
@@ -516,12 +445,7 @@ export function makeLayout(opts) {
     if (headless == true) {
         layout_params = param_fcose;
     } else {
-        // layout_params = params_cola;
-        layout_params = {
-            name: 'breadthfirst',
-            directed: true,
-            padding: 10
-          };
+        layout_params = param_brefi;
     }
 
     layout_params.randomize = false;

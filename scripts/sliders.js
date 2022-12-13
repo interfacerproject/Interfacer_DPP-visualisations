@@ -2,7 +2,6 @@
 // SLIDERS FUNCTIONS
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 import { createCustEl, addDays } from './utils.js';
-import { degreeFilterNodes, weightFilterEdges, timeFilterTweets } from './filters.js';
 import { headless } from './setup.js';
 
 // TODO: find a better mechanism

@@ -2,10 +2,9 @@
 // SETUP FUNCTIONS
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-import {calculateCentralities, calculateEdgeWeights, calculateTweetsTime} from './elem_quantities.js';
 import {hideAllTippies, createToolTip} from './tootips.js';
 import {makeSliders} from './sliders.js';
-import {applyStyle, makeLayout, removeSpinner} from './layout.js';
+import {applyStyle, makeLayout} from './layout.js';
 
 export var cy = {};
 export var headless;
@@ -19,8 +18,6 @@ export function setup(data, headless, elementId) {
   
     if ((data.nodes.length + data.edges.length) > data_size_limit) {
       headless = true;
-    } else {
-      headless = headless;
     }
   
     var container = null;
@@ -96,18 +93,7 @@ export function setup(data, headless, elementId) {
 
       // removeSpinner();
   
-      // removeLonelyNodes(cy);
-  
-      // here we decide what centralities to calculate
-      // for the sliders only the first will be used
-      var cntr_names = ['dc', 'dcn', 'cc', 'ccn', 'bc', 'bcn', 'pr'];
-  
-      var cntr_minmax = calculateCentralities(cntr_names);
-      var weight_minmax = calculateEdgeWeights();
-      var date_minmax = calculateTweetsTime();
-
-      console.log("Graph quantities calculated");
-
+ 
       // makeSliders(cntr_minmax[cntr_names[0]], weight_minmax, date_minmax);
   
       // createToolTip();

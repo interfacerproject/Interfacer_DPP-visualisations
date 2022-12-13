@@ -1,9 +1,7 @@
 {
   "dependencies": {
+    "cola": "^0.1.7",
     "cytoscape": "^3.23.0",
-    "cytoscape-cola": "^2.5.1",
-    "cytoscape-popper": "^2.0.0",
-    "jquery": "^3.6.1",
-    "tippy": "^0.0.0"
+    "cytoscape-cola": "^2.5.1"
   }
 }

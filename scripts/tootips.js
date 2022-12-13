@@ -4,31 +4,13 @@
 
 import { cy } from './setup.js';
 import { createCustEl } from './utils.js';
-import { type_switch } from './layout.js';
+import { node_properties } from './layout.js';
 
 export function createToolTip() {
   
   cy.nodes().forEach(function (node) {
 
-    let idx = type_switch(node.data('type'));
-    let tooltip = [
-      {
-        'label': node.data('name') // hashtag
-      },
-      {
-        'label': node.data('text') // tweet
-      },
-      {
-        'label': node.data('name'), // url
-        'link': 'https://' + node.data('name')
-      },
-      {
-        'label': node.data('name') // user
-      },
-      {
-        'label': node.data('name') // entity
-      }
-    ][idx];
+    let tooltip = node_properties(node.data('type')).tooltip;
 
     let content = {};
     if ('link' in tooltip) {

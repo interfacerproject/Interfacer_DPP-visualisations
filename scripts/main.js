@@ -30,7 +30,7 @@ import {setup} from './setup.js';
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 var file = './gownshirt_trace.cyto.json';
-var headless = true;
+var headless = false;
 
 console.log("Reading file " + file);
 fetch(file)

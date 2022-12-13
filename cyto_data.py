@@ -20,22 +20,24 @@ def make_cyto(dpp_item, cito_graph, assigned):
         make_cyto(ch_dpp, cito_graph, assigned=assigned)
     return    
 
-sub = 'gownshirt_trace'
 
-trace_file = f"../Interfacer-notebook/{sub}.json"
-# filename = "./isogown_trace.json"
-with open(trace_file,'r') as f:
-        tot_dpp  = json.loads(f.read())
 
-cito_graph = {
-    "nodes": [],
-    "edges": []
-}
-assigned = {}
-make_cyto(tot_dpp[0], cito_graph, assigned)
+if __name__ == "__main__":
+    sub = 'gownshirt_trace'
+    trace_file = f"../Interfacer-notebook/{sub}.json"
+    # filename = "./isogown_trace.json"
+    with open(trace_file,'r') as f:
+            tot_dpp  = json.loads(f.read())
 
-cyto_file = f'{sub}.cyto.json'
-with open(cyto_file,'w') as f:
-        f.write(json.dumps(cito_graph, indent=2))
+    cito_graph = {
+        "nodes": [],
+        "edges": []
+    }
+    assigned = {}
+    make_cyto(tot_dpp[0], cito_graph, assigned)
 
-breakpoint()
+    cyto_file = f'{sub}.cyto.json'
+    with open(cyto_file,'w') as f:
+            f.write(json.dumps(cito_graph, indent=2))
+
+    # breakpoint()
