@@ -334,15 +334,28 @@ export function node_properties(node) {
     let color;
     switch (node.data('type')) {
         case 'EconomicResource':
-            prop = {
-                color: '#8980F5',
-                label : node.data('name') || "",
-                shape : 'ellipse',
-                width : 40,
-                height : 40,
-                tooltip : {
-                    'label': node.data('name')
-                },
+            if( node.data('origin') ){
+                prop = {
+                    color: '#e34a33',
+                    label : node.data('name') || "",
+                    shape : 'ellipse',
+                    width : 40,
+                    height : 40,
+                    tooltip : {
+                        'label': node.data('name')
+                    },
+                }    
+            }else{
+                prop = {
+                    color: '#8980F5',
+                    label : node.data('name') || "",
+                    shape : 'ellipse',
+                    width : 40,
+                    height : 40,
+                    tooltip : {
+                        'label': node.data('name')
+                    },
+                }    
             }
             break;
         case 'EconomicEvent':

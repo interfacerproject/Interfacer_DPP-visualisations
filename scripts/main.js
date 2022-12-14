@@ -29,7 +29,7 @@ import {setup} from './setup.js';
 // 8) Optimize centrality calculation
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-var file = './gownshirt_trace.cyto.json';
+var file = './dpp.cyto.json';
 var headless = false;
 
 console.log("Reading file " + file);
