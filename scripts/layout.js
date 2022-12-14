@@ -461,8 +461,9 @@ export function makeLayout(opts) {
         layout_params = param_fcose;
     } else {
         layout_params = param_brefi;
+        // layout_params = params_cola;
     }
-
+    
     layout_params.randomize = false;
     layout_params.edgeLength = function (e) {
         return layout_params.edgeLengthVal / e.data('weight');
