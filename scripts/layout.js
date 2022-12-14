@@ -415,8 +415,10 @@ export function node_properties(node) {
 
 export function edge_properties(edge){
     let prop = {
-        line_color : '#000000',
-        target_arrow_color: '#000000',
+        // line_color : '#000000',
+        line_color : '#969696',
+        // target_arrow_color: '#000000',
+        target_arrow_color: '#969696',
         label : edge.data('name') || "",
         width : 3,
         tooltip : {
