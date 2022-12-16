@@ -1,6 +1,8 @@
 import plotly.graph_objects as go
 import json
 
+from utils import convert_dpp, remove_loops
+
 def make_sankey(srcs, trgs, lbls, vls, clr_nodes, clr_links):
     # data to dict, dict to sankey
     link = dict(source = srcs, target = trgs, value = vls, color=clr_links)
@@ -12,13 +14,27 @@ def make_sankey(srcs, trgs, lbls, vls, clr_nodes, clr_links):
 
 dict_node_colors = {'EconomicResource': '#e41a1c', 'EconomicEvent': '#377eb8', 'Process': '#4daf4a', 'Transfer': '#984ea3'}
 dict_link_colors = {'EconomicResource': '#fb6a4a', 'EconomicEvent': '#92c5de', 'Process': '#99d8c9', 'Transfer': '#bcbddc'}
+
 def calc_quantity(dpp_item):
+    
     if 'onhandQuantity' in dpp_item:
         quantity = dpp_item['onhandQuantity']
     elif 'effortQuantity' in dpp_item:
         quantity = dpp_item['effortQuantity']
+    elif 'resourceQuantity' in dpp_item:
+        quantity = dpp_item['resourceQuantity']
+    elif 'accounting_quantity_has_numerical_value' in dpp_item:
+        quantity = dpp_item['accounting_quantity_has_numerical_value']
+    elif 'onhand_quantity_has_numerical_value' in dpp_item:
+        quantity = dpp_item['onhand_quantity_has_numerical_value']
+    elif 'resource_quantity_has_numerical_value' in dpp_item:
+        quantity = dpp_item['resource_quantity_has_numerical_value']
+    elif 'effort_quantity_has_numerical_value' in dpp_item:
+        quantity = dpp_item['effort_quantity_has_numerical_value']
     else:
+        # breakpoint()
         quantity = '1 '
+
     quantity = int(quantity.split(' ')[0])
     quantity = max(quantity,1)
     return quantity
@@ -26,11 +42,11 @@ def calc_quantity(dpp_item):
 def vis_dpp(dpp_item, count, assigned, labels, targets, sources, values, color_nodes, color_links):
     name = dpp_item['name']
     print(f"vis name: {name}, count: {count}")
-    if dpp_item['type'] != "EconomicResource":
-        if dpp_item['id'] in assigned:
-            assigned[dpp_item['id']].append(count)
-        else:
-            assigned[dpp_item['id']] = [count]
+    # if dpp_item['type'] != "EconomicResource":
+    if dpp_item['id'] in assigned:
+        assigned[dpp_item['id']].append(count)
+    else:
+        assigned[dpp_item['id']] = [count]
     quantity = calc_quantity(dpp_item)
     labels.append(name)
     el_type = 'Transfer' if dpp_item['type'] == 'EconomicEvent' and 'transfer' in dpp_item['name'].lower() else dpp_item['type']
@@ -51,63 +67,6 @@ def vis_dpp(dpp_item, count, assigned, labels, targets, sources, values, color_n
         new_count = vis_dpp(ch_dpp, new_count, assigned=assigned, labels=labels, targets=targets, sources=sources, values=values, color_nodes=color_nodes, color_links=color_links)
     return new_count   
 
-def vis_dpp2(dpp_item, count, assigned, labels, targets, sources, values, color_nodes, color_links):
-    # breakpoint()
-
-    if dpp_item['id'] in assigned:
-        return assigned[dpp_item['id']]['count'], assigned[dpp_item['id']]['el_type'], assigned[dpp_item['id']]['quantity']
-    
-    count = count + 1
-    src_count = count
-    name = dpp_item['name']
-    quantity = calc_quantity(dpp_item)
-    el_type = 'Transfer' if dpp_item['type'] == 'EconomicEvent' and 'transfer' in dpp_item['name'].lower() else dpp_item['type']
-
-    # if dpp_item['type'] != "EconomicResource":
-    #     assigned[dpp_item['id']] = {
-    #         "count": count,
-    #         "name" : name,
-    #         "el_type" : el_type,
-    #         "quantity" : quantity
-    #         }
-    labels.append(name)
-    color_nodes.append(dict_node_colors[el_type])
-
-    nr_ch = len(dpp_item['children'])
-
-    for ch in range(nr_ch):
-        ch_dpp = dpp_item['children'][ch]
-        
-        # breakpoint()
-        src_count, src_el_type, src_quantity = vis_dpp(ch_dpp, src_count, assigned=assigned, labels=labels, targets=targets, \
-            sources=sources, values=values, color_nodes=color_nodes, color_links=color_links)
-        # breakpoint()
-        if src_quantity == 0:
-            # set_trace()
-            breakpoint()
-        if src_count == count:
-            # set_trace()
-            breakpoint()
-        
-        targets.append(count)
-        sources.append(src_count)            
-        color_links.append(dict_link_colors[src_el_type])
-        # values.append(src_quantity)
-        values.append(1)
-    return count, el_type, quantity
-
-def nav(dpp_item,count=0):
-    name = dpp_item['name']
-    print(f"name: {name}, count: {count}")
-    new_count = count + 1
-
-    nr_ch = len(dpp_item['children'])
-
-    for ch in range(nr_ch):
-        ch_dpp = dpp_item['children'][ch]
-        new_count = nav(ch_dpp,new_count)
-
-    return new_count
 
 def consol_trace(assigned, sources, targets):
     for key in assigned.keys():
@@ -121,25 +80,53 @@ def consol_trace(assigned, sources, targets):
                 targets = [i if i != vl else vl0 for i in targets]
     return sources, targets
 
-filename = "./gownshirt_trace.json"
-# filename = "./isogown_trace.json"
-with open(filename,'r') as f:
-        tot_dpp  = json.loads(f.read())
 
-labels = []
-sources = []
-targets = []
-values = []
-color_nodes = []
-color_links = []
-assigned = {}
-# vis_dpp2(tot_dpp[0], count=-1, assigned=assigned, labels=labels, targets=targets, sources=sources, values=values, color_nodes=color_nodes, color_links=color_links)
-vis_dpp(tot_dpp[0], count=0, assigned=assigned, labels=labels, targets=targets, sources=sources, values=values, color_nodes=color_nodes, color_links=color_links)
+def main(trace_file):
 
-# make_sankey(sources, targets, labels, values, color_nodes, color_links)    
-# nav(tot_dpp[0])
-sources, targets = consol_trace(assigned, sources, targets)
+    with open(trace_file,'r') as f:
+            a_dpp  = json.loads(f.read())
 
-# breakpoint()
-make_sankey(sources, targets, labels, values, color_nodes, color_links)    
-breakpoint()
+    if 'node' in a_dpp:
+        tot_dpp = convert_dpp(a_dpp)
+    else:
+        tot_dpp = a_dpp[0]
+
+    # make resource ids unique in the flow
+    remove_loops(tot_dpp)
+
+    labels = []
+    sources = []
+    targets = []
+    values = []
+    color_nodes = []
+    color_links = []
+    assigned = {}
+
+    vis_dpp(tot_dpp, count=0, assigned=assigned, labels=labels, targets=targets, sources=sources, values=values, color_nodes=color_nodes, color_links=color_links)
+
+    sources, targets = consol_trace(assigned, sources, targets)
+
+    # breakpoint()
+    make_sankey(sources, targets, labels, values, color_nodes, color_links)    
+    breakpoint()
+
+if __name__ == "__main__":
+    import argparse
+    from six import text_type    
+
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+
+    parser.add_argument(
+        '-f', '--filename',
+        dest='filename',
+        type=text_type,
+        nargs=1,
+        default='',
+        help='specifies the name of the dpp file',
+    )
+    args, unknown = parser.parse_known_args()
+
+    main(args.filename[0])
