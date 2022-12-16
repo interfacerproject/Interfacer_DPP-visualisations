@@ -28,6 +28,7 @@ def make_cyto(dpp_item, cito_graph, assigned):
 def remove_loops(dpp_item):
     if dpp_item['type'] == 'EconomicResource':
         for child in dpp_item['children']:
+            # breakpoint()
             if child['name'] == 'modify':
                 # breakpoint()
                 dpp_item['id'] = dpp_item['id'] + child['id']
@@ -35,22 +36,41 @@ def remove_loops(dpp_item):
     for child in dpp_item['children']:
         remove_loops(child)
 
+def convert_dpp(dpp):
+    # breakpoint()
+    conv_dpp = {k:v for k,v in dpp['node'].items()}
+    conv_dpp['type'] = dpp['type']
+    name = dpp['node']['name'] if 'name' in dpp['node'] else dpp['node']['action_id']
+    conv_dpp['name'] = name
+    dl = len(dpp['children'])
+    conv_dpp['children'] = [{} for i in range(dl)]
+    for ch in range(dl):
+        conv_dpp['children'][ch] = convert_dpp(dpp['children'][ch])
+    return conv_dpp
 
-def main(filename):
 
-    trace_file = f"../Interfacer-notebook/{filename}.json"
+    
+
+def main(trace_file):
+
     # filename = "./isogown_trace.json"
     with open(trace_file,'r') as f:
-            tot_dpp  = json.loads(f.read())
+            a_dpp  = json.loads(f.read())
 
-    remove_loops(tot_dpp[0])
+    if 'node' in a_dpp:
+        tot_dpp = convert_dpp(a_dpp)
+    else:
+        tot_dpp = a_dpp[0]
+
+    # breakpoint()
+    remove_loops(tot_dpp)
 
     cito_graph = {
         "nodes": [],
         "edges": []
     }
     assigned = {}
-    make_cyto(tot_dpp[0], cito_graph, assigned)
+    make_cyto(tot_dpp, cito_graph, assigned)
 
     cyto_file = 'dpp.cyto.json'
     with open(cyto_file,'w') as f:
