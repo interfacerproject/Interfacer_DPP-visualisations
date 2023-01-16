@@ -1,6 +1,7 @@
 import json
 
-from utils import convert_dpp, remove_loops
+from if_utils import differentiate_resources
+from if_dpp import convert_bedpp
 
 def make_cyto(dpp_item, cito_graph, assigned):
 
@@ -33,12 +34,12 @@ def main(trace_file):
             a_dpp  = json.loads(f.read())
 
     if 'node' in a_dpp:
-        tot_dpp = convert_dpp(a_dpp)
+        tot_dpp = convert_bedpp(a_dpp)
     else:
         tot_dpp = a_dpp[0]
 
     # breakpoint()
-    remove_loops(tot_dpp)
+    differentiate_resources(tot_dpp)
 
     cito_graph = {
         "nodes": [],
