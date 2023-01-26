@@ -78,7 +78,7 @@ export function node_properties(node) {
                 },
             }
             break;
-        case 'EconomicAgent':
+        case 'Person':
             prop = {
                 color: '#000000',
                 label : node.data('name') || "",
@@ -91,7 +91,7 @@ export function node_properties(node) {
             }
             break;
         default:
-            throw new Error('type is not defined: ' + type);
+            throw new Error('type is not defined: ' + node.data('type'));
     }
     return(prop);
 }
