@@ -21,8 +21,8 @@ def make_cyto(dpp_item, cito_graph, assigned_nodes,assigned_users, do_users):
             cito_graph['nodes'].append(user)
             assigned_users.add(dpp_item['receiver']['id'])
         data = {'data': {}}
-        data['data']['source'] = dpp_item['receiver']['id']
-        data['data']['target'] = dpp_item['id']
+        data['data']['source'] = dpp_item['id']
+        data['data']['target'] = dpp_item['receiver']['id']
         cito_graph["edges"].append(data)
 
     if not dpp_item['id'] in assigned_nodes:
