@@ -13,12 +13,19 @@ export function createToolTip() {
     let tooltip = node_properties(node).tooltip;
 
     let content = {};
-    if ('link' in tooltip) {
-      content = createCustEl('a', { target: '_blank', href: tooltip.link, 'class': 'tip-link' }, [document.createTextNode(tooltip.label)]);
+    // if ('link' in tooltip) {
+    //   content = createCustEl('a', { target: '_blank', href: tooltip.link, 'class': 'tip-link' }, [document.createTextNode(tooltip.label)]);
 
-    } else {
-      content = createCustEl('p', {}, [document.createTextNode(tooltip.label)]);
-    }
+    // } else {
+    console.log(Object.keys(tooltip));
+
+    let lines = Object.keys(tooltip).map(function (key) {
+      let val = tooltip[key];
+      return(createCustEl('p', {}, [document.createTextNode(key + ": " + val )]));
+    });
+    
+      content = createCustEl('p', {}, lines);
+    // }
 
     var tippy = makeTippy(createCustEl('div', {}, []), content, node);
 
