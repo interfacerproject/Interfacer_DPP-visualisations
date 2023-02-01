@@ -17,28 +17,27 @@ export function node_properties(node) {
     let color;
     switch (node.data('type')) {
         case 'EconomicResource':
+            prop = {
+                color: '',
+                label : node.data('name') || "",
+                shape : 'ellipse',
+                width : 40,
+                height : 40,
+                tooltip : {
+                    'label': node.data('name'),
+                    'trackingId': node.data('trackingIdentifier'),
+                    'primaryAccountable': node.data('primaryAccountable'),
+                    'custodian': node.data('custodian'),
+                    'accountingQuantity': node.data('accountingQuantity'),
+                    'onhandQuantity': node.data('onhandQuantity'),
+                    'mappableAddress': node.data('mappableAddress')
+                },
+            }    
+
             if( node.data('origin') ){
-                prop = {
-                    color: '#e34a33',
-                    label : node.data('name') || "",
-                    shape : 'ellipse',
-                    width : 40,
-                    height : 40,
-                    tooltip : {
-                        'label': node.data('name')
-                    },
-                }    
+                prop.color = '#e34a33';
             }else{
-                prop = {
-                    color: '#8980F5',
-                    label : node.data('name') || "",
-                    shape : 'ellipse',
-                    width : 40,
-                    height : 40,
-                    tooltip : {
-                        'label': node.data('name')
-                    },
-                }    
+                prop.color = '#8980F5';
             }
             break;
         case 'EconomicEvent':

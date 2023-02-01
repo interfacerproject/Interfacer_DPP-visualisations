@@ -10,7 +10,7 @@ export function createToolTip() {
   
   cy.nodes().forEach(function (node) {
 
-    let tooltip = node_properties(node.data('type')).tooltip;
+    let tooltip = node_properties(node).tooltip;
 
     let content = {};
     if ('link' in tooltip) {

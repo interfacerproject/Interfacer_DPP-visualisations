@@ -96,7 +96,7 @@ export function setup(data, headless, elementId) {
  
       // makeSliders(cntr_minmax[cntr_names[0]], weight_minmax, date_minmax);
   
-      // createToolTip();
+      createToolTip();
 
       console.log("Graphic components added");
 
