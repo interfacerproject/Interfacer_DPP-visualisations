@@ -1,13 +1,13 @@
 import json
 
-from if_utils import differentiate_resources
+from if_utils import differentiate_resources, flatten_dict
 from if_dpp import convert_bedpp
 
 def make_cyto(dpp_item, cito_graph, assigned_nodes,assigned_users, do_users):
 
     if do_users and 'provider' in dpp_item:
         if not dpp_item['provider']['id'] in assigned_users:
-            user = {'data': {k:v for k,v in dpp_item['provider'].items()}}
+            user = {'data': {k:v for k,v in flatten_dict(dpp_item['provider']).items()}}
             cito_graph['nodes'].append(user)
             assigned_users.add(dpp_item['provider']['id'])
         data = {'data': {}}
@@ -17,7 +17,7 @@ def make_cyto(dpp_item, cito_graph, assigned_nodes,assigned_users, do_users):
 
     if do_users and 'receiver' in dpp_item:
         if not dpp_item['receiver']['id'] in assigned_users:
-            user = {'data': {k:v for k,v in dpp_item['receiver'].items()}}
+            user = {'data': {k:v for k,v in flatten_dict(dpp_item['receiver']).items()}}
             cito_graph['nodes'].append(user)
             assigned_users.add(dpp_item['receiver']['id'])
         data = {'data': {}}
@@ -32,7 +32,8 @@ def make_cyto(dpp_item, cito_graph, assigned_nodes,assigned_users, do_users):
         else:
             origin = False
         assigned_nodes.add(dpp_item['id'])
-        data = {'data': {k:v for k,v in dpp_item.items() if k not in ['children']}}
+        # breakpoint()
+        data = {'data': {k:v for k,v in flatten_dict(dpp_item).items() if k not in ['children']}}
         data['data']['origin'] = origin
         cito_graph['nodes'].append(data)
 
@@ -79,7 +80,8 @@ def main(trace_file, do_users):
     assigned_nodes = set()
     assigned_users = set()
     make_cyto(tot_dpp, cito_graph, assigned_nodes, assigned_users, do_users)
-
+    
+    # breakpoint()
     cyto_file = 'dpp.cyto.json'
     with open(cyto_file,'w') as f:
             f.write(json.dumps(cito_graph, indent=2))

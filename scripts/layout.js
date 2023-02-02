@@ -24,16 +24,18 @@ export function node_properties(node) {
                 width : 40,
                 height : 40,
                 tooltip : {
-                    'label': node.data('name'),
                     'trackingId': node.data('trackingIdentifier'),
-                    'primaryAccountable': node.data('primaryAccountable'),
-                    'custodian': node.data('custodian'),
-                    'accountingQuantity': node.data('accountingQuantity'),
-                    'onhandQuantity': node.data('onhandQuantity'),
-                    'mappableAddress': node.data('mappableAddress')
+                    'primaryAccountable': node.data('primaryAccountable.name'),
+                    'custodian': node.data('custodian.name'),
+                    'accountingQuantity': node.data('accountingQuantity.hasNumericalValue') + " " + node.data('accountingQuantity.hasUnit.symbol'),
+                    'onhandQuantity': node.data('onhandQuantity.hasNumericalValue') + " " + node.data('onhandQuantity.hasUnit.symbol'),
+                    "mappableAddress": node.data('currentLocation.mappableAddress'),
+                    'lat': node.data('currentLocation.lat'),
+                    'long': node.data('currentLocation.long')        
                 },
-            }    
-
+            }
+    
+    
             if( node.data('origin') ){
                 prop.color = '#e34a33';
             }else{
@@ -61,7 +63,16 @@ export function node_properties(node) {
                 width : 40,
                 height : 40,
                 tooltip : {
-                    'label': node.data('name')
+                    'note': node.data('note'),
+                    'hasPointInTime': node.data('hasPointInTime'),
+                    'provider': node.data('provider.name'),
+                    'receiver': node.data('receiver.name'),
+                    'resourceQuantity': node.data('resourceQuantity.hasNumericalValue') != undefined? node.data('resourceQuantity.hasNumericalValue') + " " + node.data('resourceQuantity.hasUnit.symbol'): null,
+                    'effortQuantity': node.data('effortQuantity.hasNumericalValue') != undefined? node.data('effortQuantity.hasNumericalValue') + " " + node.data('effortQuantity.hasUnit.symbol'): null,
+                    "mappableAddress": node.data('toLocation.mappableAddress'),
+                    'lat': node.data('toLocation.lat'),
+                    'long': node.data('toLocation.long')        
+                    
                 },
             }
             break;
@@ -73,7 +84,7 @@ export function node_properties(node) {
                 width : 40,
                 height : 40,
                 tooltip : {
-                    'label': node.data('name')
+                    'note': node.data('note')
                 },
             }
             break;
@@ -85,7 +96,10 @@ export function node_properties(node) {
                 width : 40,
                 height : 40,
                 tooltip : {
-                    'label': node.data('name')
+                    'note': node.data('note'),
+                    "mappableAddress": node.data('primaryLocation.mappableAddress'),
+                    'lat': node.data('primaryLocation.lat'),
+                    'long': node.data('primaryLocation.long')
                 },
             }
             break;

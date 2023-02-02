@@ -17,11 +17,14 @@ export function createToolTip() {
     //   content = createCustEl('a', { target: '_blank', href: tooltip.link, 'class': 'tip-link' }, [document.createTextNode(tooltip.label)]);
 
     // } else {
-    console.log(Object.keys(tooltip));
+    // console.log(Object.keys(tooltip));
 
-    let lines = Object.keys(tooltip).map(function (key) {
-      let val = tooltip[key];
-      return(createCustEl('p', {}, [document.createTextNode(key + ": " + val )]));
+    let lines = [];
+    Object.keys(tooltip).forEach(function (key) {
+      if (key != 'label' && tooltip[key] != null){
+        let val = tooltip[key];
+        lines.push(createCustEl('p', {}, [document.createTextNode(key + ": " + val )]));
+      }
     });
     
       content = createCustEl('p', {}, lines);
