@@ -88,6 +88,18 @@ export function node_properties(node) {
                 },
             }
             break;
+        case 'ProcessGroup':
+                prop = {
+                    color: '#21897E',
+                    label : node.data('name') || "",
+                    shape : 'diamond',
+                    width : 60,
+                    height : 60,
+                    tooltip : {
+                        'note': node.data('note')
+                    },
+                }
+                break;
         case 'Person':
             prop = {
                 color: '#000000',
