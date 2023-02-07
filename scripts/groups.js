@@ -2,15 +2,16 @@
 // GROUPING FUNCTIONS
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
+var all_grouped_eles = [];
+
+var all_grouping_eles = [];
+
 export function groupNodes(cy) {
 
     var nodes = cy.elements();
 
     const groups = cy.data().groups;
 
-    var all_grouped_eles = [];
-
-    var all_grouping_eles = [];
 
     // Determine the neighboorhood of the nodes to be grouped
     for (const grouping of groups) {
@@ -24,25 +25,46 @@ export function groupNodes(cy) {
             var node = nodes.getElementById(item);
             grouped_eles = grouped_eles.union(node);
         }
-        // do not grouping actors (persons for the moment)
+        // do not group actors (persons for the moment)
         var non_actor_eles = grouped_eles.neighborhood().filter(function (ele, i, eles) {
             return ele.isEdge() || (ele.isNode() && ele.data('type') != 'Person');
         });
         grouped_eles = grouped_eles.union(non_actor_eles);
-        // Understand what edges should be connected to the new node representing the grouping
+        
+        // determine all nodes to be grouped
         var grouped_nodes = grouped_eles.filter(function (ele, i, eles) {
             return ele.isNode();
         });
+        // there might be nodes in between the grouped ones that 
+        // we need to collect as well
+        // We check whether the collection is separate
+        var components = grouped_eles.components();
+        if (components.length > 1){
+            for (var i=0; i<components.length-1;i++){
+                for (var j=i+1; j<=components.length-1;j++){
+                    var in_between_nodes = components[i].neighborhood().intersection(components[j].neighborhood());
+                    if (in_between_nodes.length > 0){
+                        grouped_nodes = grouped_nodes.union(in_between_nodes)
+                    }
+                }    
+            }
+        }
+
+        // Understand what edges should be connected to the new node representing the grouping
         var grouped_edges = grouped_nodes.edgesWith(grouped_nodes);
+        // Update the grouped elements since we have possibly added nodes
+        grouped_eles = grouped_eles.union(grouped_nodes).union(grouped_edges);
+        // These are edges not leading to a node in the group
         var external_edges = grouped_nodes.connectedEdges().difference(grouped_edges);
+        
         // Create new node and edges
         var grouping_node_json = {
             grouping: 'nodes',
             data: grouping
         };
-
         var grouping_edges_json = [];
-        // avoid multiple edges between the same nodes
+
+        // These 2 arrays are used to avoid multiple edges between the same nodes
         var sources = [];
         var targets = [];
         for (const edge of external_edges) {
@@ -90,11 +112,7 @@ export function groupNodes(cy) {
         all_grouped_eles.push(grouped_eles);
         all_grouping_eles.push(grouping_eles);
 
-    }
-
-
-
-    
+    }    
 
 }
     //     for (var j = i+1; j <= items.length - 1; j++) {
