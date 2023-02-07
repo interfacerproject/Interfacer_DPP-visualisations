@@ -90,8 +90,6 @@ export function setup(data, headless, elementId) {
   cy.ready(function () {
     console.log("Instance ready")
 
-    groupNodes(cy);
-
     cy.batch(applyStyle);
     console.log("Style applied");
 
@@ -106,7 +104,10 @@ export function setup(data, headless, elementId) {
     if (headless) {
       cy.mount(document.getElementById(elementId));
     }
+    
     makeLayout();
+
+    groupNodes(cy);
 
     // grouped_nodes.restore();
     console.log("Instance configured");

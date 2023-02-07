@@ -7,25 +7,31 @@ from if_dpp import convert_bedpp
 def make_cyto(dpp_item, cito_graph, assigned_nodes, assigned_users, do_users):
 
     if do_users and 'provider' in dpp_item:
-        if not dpp_item['provider']['id'] in assigned_users:
+        # id = dpp_item['id'] + dpp_item['provider']['id']
+        id = dpp_item['provider']['id']
+        if not id in assigned_users:
             user = {'data': {k: v for k, v in flatten_dict(
                 dpp_item['provider']).items()}}
+            user['data']['id'] = id
             cito_graph['nodes'].append(user)
-            assigned_users.add(dpp_item['provider']['id'])
+            assigned_users.add(id)
         data = {'data': {}}
-        data['data']['source'] = dpp_item['provider']['id']
+        data['data']['source'] = id
         data['data']['target'] = dpp_item['id']
         cito_graph["edges"].append(data)
 
     if do_users and 'receiver' in dpp_item:
-        if not dpp_item['receiver']['id'] in assigned_users:
+        # id = dpp_item['id'] + dpp_item['receiver']['id']
+        id = dpp_item['receiver']['id']
+        if not id in assigned_users:
             user = {'data': {k: v for k, v in flatten_dict(
                 dpp_item['receiver']).items()}}
+            user['data']['id'] = id
             cito_graph['nodes'].append(user)
-            assigned_users.add(dpp_item['receiver']['id'])
+            assigned_users.add(id)
         data = {'data': {}}
         data['data']['source'] = dpp_item['id']
-        data['data']['target'] = dpp_item['receiver']['id']
+        data['data']['target'] = id
         cito_graph["edges"].append(data)
 
     if not dpp_item['id'] in assigned_nodes:
