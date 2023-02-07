@@ -73,16 +73,16 @@ export function setup(data, headless, elementId) {
 
   cy.on('tap', function (e) {
     if (e.target === cy) {
-      hideAllTippies();
+      hideAllTippies(cy);
     }
   });
 
   cy.on('tap', 'edge', function (e) {
-    hideAllTippies();
+    hideAllTippies(cy);
   });
 
   cy.on('zoom pan', function (e) {
-    hideAllTippies();
+    hideAllTippies(cy);
   });
 
 
@@ -99,7 +99,7 @@ export function setup(data, headless, elementId) {
 
     // makeSliders(cntr_minmax[cntr_names[0]], weight_minmax, date_minmax);
 
-    createToolTip();
+    createToolTip(cy);
 
     console.log("Graphic components added");
 

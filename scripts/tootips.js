@@ -2,11 +2,10 @@
 // TOOLTIP FUNCTIONS§§
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-import { cy } from './setup.js';
 import { createCustEl } from './utils.js';
 import { node_properties } from './layout.js';
 
-export function createToolTip() {
+export function createToolTip(cy) {
   
   cy.nodes().forEach(function (node) {
 
@@ -92,6 +91,6 @@ export function hideTippy(node) {
   }
 }
 
-export function hideAllTippies() {
+export function hideAllTippies(cy) {
   cy.nodes().forEach(hideTippy);
 }
