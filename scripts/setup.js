@@ -97,19 +97,20 @@ export function setup(data, headless, elementId) {
 
     // makeSliders(cntr_minmax[cntr_names[0]], weight_minmax, date_minmax);
 
-    createToolTip(cy);
-
-    console.log("Graphic components added");
 
     if (headless) {
       cy.mount(document.getElementById(elementId));
     }
     
-    makeLayout();
-
     groupNodes(cy);
+    console.log("Nodes grouped");
+    
+    createToolTip(cy);
+    console.log("Tooltips added");
 
-    // grouped_nodes.restore();
+    makeLayout(cy.elements());
+    console.log("Layout applied");
+    
     console.log("Instance configured");
 
   });

@@ -8,23 +8,23 @@ var all_grouped_eles = [];
 
 var all_grouping_eles = [];
 
-export function groupNodes(cy) {
+function calculateGroups(cy) {
 
-    var nodes = cy.elements();
+    var elements = cy.elements();
 
-    const groups = cy.data().groups;
+    const groups_data = cy.data().groups;
 
 
     // Determine the neighboorhood of the nodes to be grouped
-    for (const grouping of groups) {
+    for (const grouping_data of groups_data) {
         var grouped_eles = cy.collection();
-        const items = grouping.groups;
+        const items = grouping_data.groups;
         if (items.length < 2) {
             console.warn("Groups has less than 2 elements");
             continue;
         }
         for (const item of items) {
-            var node = nodes.getElementById(item);
+            var node = elements.getElementById(item);
             grouped_eles = grouped_eles.union(node);
         }
         // do not group actors (persons for the moment)
@@ -65,7 +65,7 @@ export function groupNodes(cy) {
         // Create new node and edges
         var grouping_node_json = {
             grouping: 'nodes',
-            data: grouping
+            data: grouping_data
         };
         var grouping_edges_json = [];
 
@@ -85,7 +85,7 @@ export function groupNodes(cy) {
                 grouping_edge_json = {
                     data: {
                         id: edge.data('id') + "_grouped",
-                        source: grouping.id,
+                        source: grouping_data.id,
                         target: node_target.data('id')
                     }
                 };
@@ -99,82 +99,144 @@ export function groupNodes(cy) {
                     data: {
                         id: edge.data('id') + "_grouped",
                         source: node_source.data('id'),
-                        target: grouping.id
+                        target: grouping_data.id
                     }
                 };
             } else {
-                throw new Exception("Inconsistent grouping")
+                throw new Error("Inconsistent grouping")
             }
             grouping_edges_json.push(grouping_edge_json);
         }
-        // Remove grouped elements
-        cy.remove(grouped_eles);
         var grouping_eles = cy.collection();
         grouping_eles = grouping_eles.union(cy.add(grouping_node_json));
-
         grouping_eles = grouping_eles.union(cy.add(grouping_edges_json));
-        handleGroups(grouping_eles, true);
 
         all_grouped_eles.push(grouped_eles);
         all_grouping_eles.push(grouping_eles);
     }
 }
+function getParentNode(index){
+    var parent_node = all_grouping_eles[index].nodes();
+    if (parent_node.length > 1){
+        throw new Error("More than one parent");
+    }
+    return(parent_node[0]);
+}
 
-function expandGroup(node) {
+function collapseGroup(index) {
+
+    var parent_node = getParentNode(index);
+    
+    var aNode = all_grouped_eles[index].nodes()[0];
+    aNode.cy().add(all_grouping_eles[index]);
+
+    all_grouped_eles[index].nodes().move({
+        parent: parent_node.data('id')
+    });
+}
+
+function expandGroup(index) {
+
+    all_grouped_eles[index].nodes().move({
+        parent: null
+    });
+
+    var aNode = all_grouped_eles[index].nodes()[0];
+    // var parent_node = getParentNode(index);
+    // parent_node.removeListener('cxttap');
+    assignHandler(index, false);
+    
+    aNode.cy().remove(all_grouping_eles[index]);
+    
+
+}
+
+function expandGroupFromNode(node) {
     // Find to which group this node belongs
     var found = false;
-    for (var i=0; i < all_grouping_eles.length; i++) {
+    for (var i = 0; i < all_grouping_eles.length; i++) {
         if (all_grouping_eles[i].contains(node)) {
             found = true;
-            node.cy().remove(all_grouping_eles[i]);
-            node.cy().add(all_grouped_eles[i]);
-            handleGroups(all_grouped_eles[i], false);
-            makeLayout();
-            return;   
+            expandGroup(i);
+            return;
         }
     }
-    if (!found){
-        throw new Exception("Node not found in grouping nodes")
+    if (!found) {
+        throw new Error("Node not found in grouping nodes " + node.data('name'));
     }
 }
 
-function collapseGroup(node) {
+function collapseGroupFromNode(node) {
     // Find to which group this node belongs
     var found = false;
-    for (var i=0; i < all_grouped_eles.length; i++) {
+    for (var i = 0; i < all_grouped_eles.length; i++) {
         if (all_grouped_eles[i].contains(node)) {
             found = true;
-            node.cy().remove(all_grouped_eles[i]);
-            node.cy().add(all_grouping_eles[i]);
-            handleGroups(all_grouping_eles[i], true);
-            makeLayout();
-            return;   
+            collapseGroup(i);
+            assignHandler(i, true);
+            return;
         }
     }
-    if (!found){
-        throw new Exception("Node not found in grouped nodes")
+    if (!found) {
+        throw new Error("Node not found in grouped nodes " + node.data('name'));
     }
 }
 
-function handleGroups(eles, grouping_eles) {
+function assignHandler(index, grouping_eles) {
 
     if (grouping_eles) {
-        eles.nodes().forEach(function (node) {
+        all_grouping_eles[index].nodes().forEach(function (node) {
 
+            node.removeListener('cxttap');
             node.on('cxttap', function (e) {
-                expandGroup(e.target);
+                expandGroupFromNode(e.target);
+                e.stopPropagation();
 
             });
         });
-    } else {
-        eles.nodes().forEach(function (node) {
+        all_grouped_eles[index].nodes().forEach(function (node) {
 
+            node.removeListener('cxttap');
             node.on('cxttap', function (e) {
-                collapseGroup(e.target);
+                e.stopPropagation();
+            });
+        });
+        
+    } else {
+        // all_grouped_eles[index].nodes()[0].cy().removeListener('cxttap');
+        all_grouping_eles[index].nodes().forEach(function (node) {
+
+            node.removeListener('cxttap');
+            node.on('cxttap', function (e) {
+                e.stopPropagation();
+            });
+        });
+        all_grouped_eles[index].nodes().forEach(function (node) {
+
+            node.removeListener('cxttap');
+            node.on('cxttap', function (e) {
+                collapseGroupFromNode(e.target);
+                e.stopPropagation();
             });
         });
     }
 }
+
+
+export function groupNodes(cy) {
+    calculateGroups(cy);
+
+    for (var i = 0; i < all_grouped_eles.length; i++) {
+        // assignHandler(i, false);
+        collapseGroup(i);
+        assignHandler(i, true);
+    }
+    // cy.remove(grouped_eles);
+
+}
+
+
+
 
     //     for (var j = i+1; j <= items.length - 1; j++) {
     //     var node_j = nodes.getElementById(items[j]);
