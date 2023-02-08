@@ -35,7 +35,7 @@ export function createToolTip(cy) {
 
     node.on('click', function (e) {
       tippy.show();
-
+      e.stopPropagation();
       // cy.nodes().not(node).forEach(hideTippy);
     });
   });

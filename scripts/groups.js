@@ -17,7 +17,9 @@ function calculateGroups(cy) {
 
     // Determine the neighboorhood of the nodes to be grouped
     for (const grouping_data of groups_data) {
-        var grouped_eles = cy.collection();
+        var grouped_eles = {};
+        grouped_eles.eles = cy.collection();
+        grouped_eles.ext_edges = cy.collection();
         const items = grouping_data.groups;
         if (items.length < 2) {
             console.warn("Groups has less than 2 elements");
@@ -25,22 +27,22 @@ function calculateGroups(cy) {
         }
         for (const item of items) {
             var node = elements.getElementById(item);
-            grouped_eles = grouped_eles.union(node);
+            grouped_eles.eles = grouped_eles.eles.union(node);
         }
         // do not group actors (persons for the moment)
-        var non_actor_eles = grouped_eles.neighborhood().filter(function (ele, i, eles) {
+        var non_actor_eles = grouped_eles.eles.neighborhood().filter(function (ele, i, eles) {
             return ele.isEdge() || (ele.isNode() && ele.data('type') != 'Person');
         });
-        grouped_eles = grouped_eles.union(non_actor_eles);
+        grouped_eles.eles = grouped_eles.eles.union(non_actor_eles);
 
         // determine all nodes to be grouped
-        var grouped_nodes = grouped_eles.filter(function (ele, i, eles) {
+        var grouped_nodes = grouped_eles.eles.filter(function (ele, i, eles) {
             return ele.isNode();
         });
         // there might be nodes in between the grouped ones that 
         // we need to collect as well
         // We check whether the collection is separate
-        var components = grouped_eles.components();
+        var components = grouped_eles.eles.components();
         if (components.length > 1) {
             for (var i = 0; i < components.length - 1; i++) {
                 for (var j = i + 1; j <= components.length - 1; j++) {
@@ -55,12 +57,12 @@ function calculateGroups(cy) {
         // Understand what edges should be connected to the new node representing the grouping
         var grouped_edges = grouped_nodes.edgesWith(grouped_nodes);
         // Update the grouped elements since we have possibly added nodes
-        grouped_eles = grouped_eles.union(grouped_nodes).union(grouped_edges);
+        grouped_eles.eles = grouped_eles.eles.union(grouped_nodes).union(grouped_edges);
         // These are edges not leading to a node in the group
-        var external_edges = grouped_nodes.connectedEdges().difference(grouped_edges);
+        grouped_eles.ext_edges = grouped_nodes.connectedEdges().difference(grouped_edges);
 
         // Update the grouped elements since when we remove the nodes we will lose the external edges
-        grouped_eles = grouped_eles.union(external_edges);
+        // grouped_eles = grouped_eles.union(external_edges);
 
         // Create new node and edges
         var grouping_node_json = {
@@ -72,7 +74,7 @@ function calculateGroups(cy) {
         // These 2 arrays are used to avoid multiple edges between the same nodes
         var sources = [];
         var targets = [];
-        for (const edge of external_edges) {
+        for (const edge of grouped_eles.ext_edges) {
             var grouping_edge_json = undefined;
             var node_source = edge.source();
             var node_target = edge.target();
@@ -127,28 +129,29 @@ function collapseGroup(index) {
 
     var parent_node = getParentNode(index);
     
-    var aNode = all_grouped_eles[index].nodes()[0];
+    var aNode = all_grouped_eles[index].eles.nodes()[0];
     aNode.cy().add(all_grouping_eles[index]);
+    aNode.cy().remove(all_grouped_eles[index].ext_edges);
 
-    all_grouped_eles[index].nodes().move({
+    all_grouped_eles[index].eles.nodes().move({
         parent: parent_node.data('id')
     });
 }
 
 function expandGroup(index) {
 
-    all_grouped_eles[index].nodes().move({
+    all_grouped_eles[index].eles.nodes().move({
         parent: null
     });
 
-    var aNode = all_grouped_eles[index].nodes()[0];
+    var aNode = all_grouped_eles[index].eles.nodes()[0];
     // var parent_node = getParentNode(index);
     // parent_node.removeListener('cxttap');
     assignHandler(index, false);
     
     aNode.cy().remove(all_grouping_eles[index]);
+    aNode.cy().add(all_grouped_eles[index].ext_edges);
     
-
 }
 
 function expandGroupFromNode(node) {
@@ -170,7 +173,7 @@ function collapseGroupFromNode(node) {
     // Find to which group this node belongs
     var found = false;
     for (var i = 0; i < all_grouped_eles.length; i++) {
-        if (all_grouped_eles[i].contains(node)) {
+        if (all_grouped_eles[i].eles.contains(node)) {
             found = true;
             collapseGroup(i);
             assignHandler(i, true);
@@ -194,7 +197,7 @@ function assignHandler(index, grouping_eles) {
 
             });
         });
-        all_grouped_eles[index].nodes().forEach(function (node) {
+        all_grouped_eles[index].eles.nodes().forEach(function (node) {
 
             node.removeListener('cxttap');
             node.on('cxttap', function (e) {
@@ -211,7 +214,7 @@ function assignHandler(index, grouping_eles) {
                 e.stopPropagation();
             });
         });
-        all_grouped_eles[index].nodes().forEach(function (node) {
+        all_grouped_eles[index].eles.nodes().forEach(function (node) {
 
             node.removeListener('cxttap');
             node.on('cxttap', function (e) {
