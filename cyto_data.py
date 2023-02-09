@@ -136,7 +136,7 @@ if __name__ == "__main__":
         '-d', '--add_as_data',
         dest='add_as_data',
         action='store_true',
-        default=True,
+        default=False,
         help='specifies whether to add group info as graph data',
     )
 

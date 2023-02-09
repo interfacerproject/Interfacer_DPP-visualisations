@@ -1,5 +1,5 @@
 body {
-	font-family: Arial, Helvetica, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 #cyto {
@@ -36,6 +36,7 @@ body {
     overflow: auto;
     z-index: 1;
 }
+
 .preamble {
     margin-bottom: 2em;
 }
@@ -51,7 +52,7 @@ p {
 }
 
 .ui-draggable, .ui-droppable {
-	background-position: top;
+    background-position: top;
 }
 
 .ui-slider-horizontal .ui-slider-handle {
@@ -136,4 +137,9 @@ p {
 
 .tippy-box[data-theme~='tomato'][data-placement^='right']>.tippy-arrow::before {
     border-right-color: tomato;
+}
+
+.collapsed-child {
+    opacity: 0;
+    z-index: -1;
 }
