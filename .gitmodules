@@ -14,5 +14,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-dpp.cyto.json
-062*.json
+[submodule ".reuse"]
+	path = .reuse
+	url = https://github.com/interfacerproject/reuse
