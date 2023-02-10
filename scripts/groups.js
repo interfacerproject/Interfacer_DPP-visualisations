@@ -112,7 +112,7 @@ function calc_groups(cy, grouping_data) {
     return (group_level);
 }
 
-function getParentNode(eles) {
+function findParentNode(eles) {
     var parent_node = eles.grouping.nodes();
     if (parent_node.length > 1) {
         throw new Error("More than one parent");
@@ -120,34 +120,19 @@ function getParentNode(eles) {
     return (parent_node[0]);
 }
 
-function findNode(node, group_tree, search_grouping) {
-
-    if (search_grouping) {
-        if (group_tree.eles.grouping.contains(node)) {
-            return (group_tree);
-        } else {
-            if (group_tree.group_objs !== undefined) {
-                for (const child of group_tree.group_objs) {
-                    var result = findNode(node, child, search_grouping);
-                    if (result != null) {
-                        return (result);
-                    }
-                }
+function findNode(node, group_tree_array, search_grouping) {
+    for (var group_tree of group_tree_array) {
+        if (search_grouping) {
+            if (group_tree.eles.grouping.contains(node)) {
+                return (group_tree);
+            } else if (group_tree.group_objs !== undefined) {
+                return findNode(node, group_tree.group_objs, search_grouping);
             }
-        }
-    } else {
-        if (group_tree.eles.grouped.contains(node)) {
-            return (group_tree);
         } else {
-            if (group_tree.group_objs !== undefined) {
-                if (group_tree.group_objs !== undefined) {
-                    for (const child of group_tree.group_objs) {
-                        var result = findNode(node, child, search_grouping);
-                        if (result != null) {
-                            return (result);
-                        }
-                    }
-                }
+            if (group_tree.eles.grouped.contains(node)) {
+                return (group_tree);
+            } else if (group_tree.group_objs !== undefined) {
+                return findNode(node, group_tree.group_objs, search_grouping);
             }
         }
     }
@@ -155,7 +140,7 @@ function findNode(node, group_tree, search_grouping) {
 
 function collapseGroup(eles) {
 
-    var parent_node = getParentNode(eles);
+    var parent_node = findParentNode(eles);
 
     var aNode = eles.grouping.nodes()[0];
     aNode.cy().add(eles.grouping);
@@ -189,34 +174,34 @@ function expandGroup(eles) {
 
 }
 
+function collapseGroupFromNode(node) {
+    // This function is more complex since
+    // when collapsing a branch we need to collapse
+    // Also all other sibling branches
+
+    // Find to which group this node belongs
+    var group_tree = findNode(node, group_tree_array, false);
+    if (group_tree == null) {
+        throw new Error("Node not found in grouped nodes: " + node.data('name'));
+    }
+
+    var parent_node = findParentNode(group_tree.eles);
+    var group_parent = findNode(parent_node, group_tree_array, true);
+
+    if (group_parent == null) {
+        throw new Error("Parent node not found in grouped nodes: " + parent_node.data('name'));
+    }
+    collapseAllGroups([group_parent]);
+}
+
 function expandGroupFromNode(node) {
     // Find to which group this node belongs
-    var group_tree = null;
-    for (var agroup_tree of group_tree_array) {
-        group_tree = findNode(node, agroup_tree, true);
-        if (group_tree != null) {
-            break;
-        }
-    }
+    var group_tree = findNode(node, group_tree_array, true);
+
     if (group_tree == null) {
         throw new Error("Node not found in grouping nodes: " + node.data('name'));
     }
     expandGroup(group_tree.eles);
-}
-
-function collapseGroupFromNode(node) {
-    // Find to which group this node belongs
-    var group_tree = null;
-    for (var agroup_tree of group_tree_array) {
-        group_tree = findNode(node, agroup_tree, false);
-        if (group_tree != null) {
-            break;
-        }
-    }
-    if (group_tree == null) {
-        throw new Error("Node not found in grouped nodes: " + node.data('name'));
-    }
-    collapseGroup(group_tree.eles);
 }
 
 function assignHandler(group_tree) {
@@ -352,10 +337,19 @@ function calcAllGroups(cy, group_tree_array) {
 
         if (group_tree.group_objs == undefined) {
             group_tree.eles = calc_groups(cy, group_tree);
-            collapseGroup(group_tree.eles);
         } else {
             calcAllGroups(cy, group_tree.group_objs);
             group_tree.eles = calc_groups(cy, group_tree);
+        }
+    }
+}
+function collapseAllGroups(group_tree_array) {
+    for (var group_tree of group_tree_array) {
+
+        if (group_tree.group_objs == undefined) {
+            collapseGroup(group_tree.eles);
+        } else {
+            collapseAllGroups(group_tree.group_objs);
             collapseGroup(group_tree.eles);
         }
     }
@@ -396,6 +390,7 @@ export function groupNodes(cy) {
     createTree(cy);
 
     calcAllGroups(cy, group_tree_array);
+    collapseAllGroups(group_tree_array);
     printTree(group_tree_array, "--");
 
     assignAllHandlers(group_tree_array);
