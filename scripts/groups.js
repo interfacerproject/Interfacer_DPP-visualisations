@@ -123,22 +123,28 @@ function findNode(node, group_tree, search_grouping) {
 
     if (search_grouping) {
         if (group_tree.eles.grouping.contains(node)) {
-            return (group_tree.eles);
+            return (group_tree);
         } else {
             if (group_tree.group_objs !== undefined) {
                 for (const child of group_tree.group_objs) {
-                    return findNode(node, child, search_grouping);
+                    var result = findNode(node, child, search_grouping);
+                    if (result != null){
+                        return(result);
+                    }
                 }
             }
         }
     } else {
         if (group_tree.eles.grouped.contains(node)) {
-            return (group_tree.eles);
+            return (group_tree);
         } else {
             if (group_tree.group_objs !== undefined) {
                 if (group_tree.group_objs !== undefined) {
                     for (const child of group_tree.group_objs) {
-                        return findNode(node, child, search_grouping);
+                        var result = findNode(node, child, search_grouping);
+                        if (result != null){
+                            return(result);
+                        }
                     }
                 }
             }
@@ -172,7 +178,6 @@ function expandGroup(eles) {
     var aNode = eles.grouped.nodes()[0];
     // var parent_node = get_par_node(index);
     // parent_node.removeListener('cxttap');
-    assignHandler(eles, false);
 
     aNode.cy().remove(eles.grouping);
     aNode.cy().add(eles.ext_edges);
@@ -185,56 +190,117 @@ function expandGroup(eles) {
 
 function expandGroupFromNode(node) {
     // Find to which group this node belongs
-    var eles = null;
-    for (var group_tree of group_tree_array) {
-        eles = findNode(node, group_tree, true);
-        if (eles != null) {
+    var group_tree = null;
+    for (var agroup_tree of group_tree_array) {
+        group_tree = findNode(node, agroup_tree, true);
+        if (group_tree != null) {
             break;
         }
     }
-    if (eles == null) {
-        throw new Error("Node not found in grouped nodes " + node.data('name'));
+    if (group_tree == null) {
+        throw new Error("Node not found in grouping nodes: " + node.data('name'));
     }
-    expandGroup(eles);
+    expandGroup(group_tree.eles);
+    assignHandler(group_tree);
 }
 
 function collapseGroupFromNode(node) {
     // Find to which group this node belongs
-    var eles = null;
-    for (var group_tree of group_tree_array) {
-        eles = findNode(node, group_tree, true);
-        if (eles != null) {
+    var group_tree = null;
+    for (var agroup_tree of group_tree_array) {
+        group_tree = findNode(node, agroup_tree, false);
+        if (group_tree != null) {
             break;
         }
     }
-    if (eles == null) {
-        throw new Error("Node not found in grouped nodes " + node.data('name'));
+    if (group_tree == null) {
+        throw new Error("Node not found in grouped nodes: " + node.data('name'));
     }
-    collapseGroup(eles);
-    assignHandler(eles, true);
-
+    collapseGroup(group_tree.eles);
+    assignHandler(group_tree);
 }
 
-function assignHandler(eles, grouping_eles) {
-
-    if (grouping_eles) {
-        eles.grouping.nodes().forEach(function (node) {
-
-            node.removeListener('cxttap');
-            node.on('cxttap', function (e) {
-                expandGroupFromNode(e.target);
-                e.stopPropagation();
-            });
-        });
-        eles.grouped.nodes().forEach(function (node) {
-
-            node.removeListener('cxttap');
-            node.on('cxttap', function (e) {
-                e.stopPropagation();
-            });
-        });
+function assignHandler(group_tree, init = false) {
+    var position = null;
+    if (group_tree.group_objs == undefined) {
+        if (group_tree.groupedIn == null) {
+            position = 'head';
+        } else {
+            position = 'leaf';
+        }
 
     } else {
+        if (group_tree.groupedIn == null) {
+            position = 'tree_head';
+        } else {
+            position = 'intermediate';
+        }
+    }
+    if (position == null) {
+        throw new Error("Could not calculate position");
+    }
+    var eles = group_tree.eles;
+
+    if (position == 'head') {
+        if (init) {
+            eles.grouping.nodes().forEach(function (node) {
+
+                node.removeListener('cxttap');
+                node.on('cxttap', function (e) {
+                    expandGroupFromNode(e.target);
+                    e.stopPropagation();
+                });
+            });
+            eles.grouped.nodes().forEach(function (node) {
+
+                node.removeListener('cxttap');
+                node.on('cxttap', function (e) {
+                    collapseGroupFromNode(e.target);
+                    e.stopPropagation();
+                });
+            });
+        }
+        return;
+
+    } else if (position == 'tree_head') {
+        if (init) {
+            eles.grouping.nodes().forEach(function (node) {
+
+                node.removeListener('cxttap');
+                node.on('cxttap', function (e) {
+                    expandGroupFromNode(e.target);
+                    e.stopPropagation();
+                });
+            });
+            eles.grouped.nodes().forEach(function (node) {
+
+                node.removeListener('cxttap');
+                node.on('cxttap', function (e) {
+                    e.stopPropagation();
+                });
+            });
+        } else {
+            eles.grouped.nodes().forEach(function (node) {
+
+                node.removeListener('cxttap');
+                node.on('cxttap', function (e) {
+                    expandGroupFromNode(e.target);
+                    e.stopPropagation();
+                });
+            });
+            eles.grouping.nodes().forEach(function (node) {
+
+                node.removeListener('cxttap');
+                node.on('cxttap', function (e) {
+                    e.stopPropagation();
+                });
+            });
+        }
+
+    } else if (position == 'leaf') {
+        if (init) {
+            throw new Error("Init true on leaf group");
+        }
         // all_grouped_eles[index].nodes()[0].cy().removeListener('cxttap');
         eles.grouping.nodes().forEach(function (node) {
 
@@ -251,6 +317,27 @@ function assignHandler(eles, grouping_eles) {
                 e.stopPropagation();
             });
         });
+    } else if (position == 'intermediate') {
+        if (init) {
+            throw new Error("Init true on intermediate group");
+        }
+        eles.grouping.nodes().forEach(function (node) {
+
+            node.removeListener('cxttap');
+            node.on('cxttap', function (e) {
+                expandGroupFromNode(e.target);
+                e.stopPropagation();
+            });
+        });
+        eles.grouped.nodes().forEach(function (node) {
+
+            node.removeListener('cxttap');
+            node.on('cxttap', function (e) {
+                e.stopPropagation();
+            });
+        });
+    } else {
+        throw new Error("Unknown position: " + position);
     }
 }
 
@@ -265,7 +352,7 @@ function findParent(group_tree_array, grouping_data) {
         } else if (group.group_objs == undefined) {
             continue;
         } else {
-            if (findParent([group], grouping_data)) {
+            if (findParent(group.group_objs, grouping_data)) {
                 return (true);
             }
         }
@@ -277,7 +364,7 @@ function createTree(cy) {
     const groups_data = cy.data().groups;
 
     var groups_len = groups_data.length;
-    var group_tree_array = [];
+
     for (const grouping_data of groups_data) {
         if (grouping_data.groupedIn == null) {
             group_tree_array.push(grouping_data);
@@ -293,7 +380,7 @@ function createTree(cy) {
             }
         }
     }
-    return (group_tree_array);
+    return;
 }
 
 function calcAllGroups(cy, group_tree_array) {
@@ -302,20 +389,46 @@ function calcAllGroups(cy, group_tree_array) {
         if (group_tree.group_objs == undefined) {
             group_tree.eles = calc_groups(cy, group_tree);
             collapseGroup(group_tree.eles);
-            assignHandler(group_tree.eles, true);
         } else {
             calcAllGroups(cy, group_tree.group_objs);
             group_tree.eles = calc_groups(cy, group_tree);
             collapseGroup(group_tree.eles);
-            assignHandler(group_tree.eles, true);
         }
     }
 }
+
+function printTree(group_tree_array, level) {
+    for (var group_tree of group_tree_array) {
+        console.log(level + "name: " + group_tree.name);
+        console.log(level + "grouping: ");
+        group_tree.eles.grouping.nodes().filter(function(node){
+            return node.data('type') == "ProcessGroup" || node.data('type') == "Process";
+        }).forEach(function (node) {
+            console.log(level + " * " + node.data('name'));
+        })
+        console.log(level + "grouped: ");
+        group_tree.eles.grouped.nodes().filter(function(node){
+            return node.data('type') == "ProcessGroup" || node.data('type') == "Process";
+        }).forEach(function (node) {
+            console.log(level + " * " + node.data('name'));
+        })
+        if (group_tree.group_objs != undefined) {
+            printTree(group_tree.group_objs, level + "--");
+        }
+    }
+
+}
 export function groupNodes(cy) {
 
-    group_tree_array = createTree(cy);
+    createTree(cy);
 
     calcAllGroups(cy, group_tree_array);
+    printTree(group_tree_array, "--");
+
+    for (var group_tree of group_tree_array) {
+        // assign handler only to heads
+        assignHandler(group_tree, true);
+    }
 
 }
 
