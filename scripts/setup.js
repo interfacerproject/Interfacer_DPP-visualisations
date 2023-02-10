@@ -12,7 +12,7 @@ export var headless;
 
 
 export function setup(data, headless, elementId) {
-  console.log("Setup started")
+  console.debug("Setup started")
 
 
   const data_size_limit = 5000;
@@ -88,10 +88,10 @@ export function setup(data, headless, elementId) {
 
 
   cy.ready(function () {
-    console.log("Instance ready")
+    console.debug("Instance ready")
 
     cy.batch(applyStyle);
-    console.log("Style applied");
+    console.debug("Style applied");
 
     // removeSpinner();
 
@@ -103,15 +103,15 @@ export function setup(data, headless, elementId) {
     }
     
     groupNodes(cy);
-    console.log("Nodes grouped");
+    console.debug("Nodes grouped");
     
     createToolTip(cy);
-    console.log("Tooltips added");
+    console.debug("Tooltips added");
 
     makeLayout(cy.elements());
-    console.log("Layout applied");
+    console.debug("Layout applied");
     
-    console.log("Instance configured");
+    console.debug("Instance configured");
 
   });
 

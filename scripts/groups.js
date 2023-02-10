@@ -1,6 +1,7 @@
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 // GROUPING FUNCTIONS
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+import { hideAllTippies } from './tootips.js';
 
 var group_tree_array = [];
 
@@ -128,8 +129,8 @@ function findNode(node, group_tree, search_grouping) {
             if (group_tree.group_objs !== undefined) {
                 for (const child of group_tree.group_objs) {
                     var result = findNode(node, child, search_grouping);
-                    if (result != null){
-                        return(result);
+                    if (result != null) {
+                        return (result);
                     }
                 }
             }
@@ -142,8 +143,8 @@ function findNode(node, group_tree, search_grouping) {
                 if (group_tree.group_objs !== undefined) {
                     for (const child of group_tree.group_objs) {
                         var result = findNode(node, child, search_grouping);
-                        if (result != null){
-                            return(result);
+                        if (result != null) {
+                            return (result);
                         }
                     }
                 }
@@ -178,7 +179,7 @@ function expandGroup(eles) {
     var aNode = eles.grouped.nodes()[0];
     // var parent_node = get_par_node(index);
     // parent_node.removeListener('cxttap');
-
+    hideAllTippies(eles.grouping);
     aNode.cy().remove(eles.grouping);
     aNode.cy().add(eles.ext_edges);
     eles.grouped.forEach(function (ele) {
@@ -201,7 +202,6 @@ function expandGroupFromNode(node) {
         throw new Error("Node not found in grouping nodes: " + node.data('name'));
     }
     expandGroup(group_tree.eles);
-    assignHandler(group_tree);
 }
 
 function collapseGroupFromNode(node) {
@@ -217,10 +217,12 @@ function collapseGroupFromNode(node) {
         throw new Error("Node not found in grouped nodes: " + node.data('name'));
     }
     collapseGroup(group_tree.eles);
-    assignHandler(group_tree);
 }
 
-function assignHandler(group_tree, init = false) {
+function assignHandler(group_tree) {
+    // Only assign handlers to the eles.grouped
+    // for all groups that are not head or tree_head
+    // For head and tree_head assign both eles.grouping and eles.grouped
     var position = null;
     if (group_tree.group_objs == undefined) {
         if (group_tree.groupedIn == null) {
@@ -242,85 +244,6 @@ function assignHandler(group_tree, init = false) {
     var eles = group_tree.eles;
 
     if (position == 'head') {
-        if (init) {
-            eles.grouping.nodes().forEach(function (node) {
-
-                node.removeListener('cxttap');
-                node.on('cxttap', function (e) {
-                    expandGroupFromNode(e.target);
-                    e.stopPropagation();
-                });
-            });
-            eles.grouped.nodes().forEach(function (node) {
-
-                node.removeListener('cxttap');
-                node.on('cxttap', function (e) {
-                    collapseGroupFromNode(e.target);
-                    e.stopPropagation();
-                });
-            });
-        }
-        return;
-
-    } else if (position == 'tree_head') {
-        if (init) {
-            eles.grouping.nodes().forEach(function (node) {
-
-                node.removeListener('cxttap');
-                node.on('cxttap', function (e) {
-                    expandGroupFromNode(e.target);
-                    e.stopPropagation();
-                });
-            });
-            eles.grouped.nodes().forEach(function (node) {
-
-                node.removeListener('cxttap');
-                node.on('cxttap', function (e) {
-                    e.stopPropagation();
-                });
-            });
-        } else {
-            eles.grouped.nodes().forEach(function (node) {
-
-                node.removeListener('cxttap');
-                node.on('cxttap', function (e) {
-                    expandGroupFromNode(e.target);
-                    e.stopPropagation();
-                });
-            });
-            eles.grouping.nodes().forEach(function (node) {
-
-                node.removeListener('cxttap');
-                node.on('cxttap', function (e) {
-                    e.stopPropagation();
-                });
-            });
-        }
-
-    } else if (position == 'leaf') {
-        if (init) {
-            throw new Error("Init true on leaf group");
-        }
-        // all_grouped_eles[index].nodes()[0].cy().removeListener('cxttap');
-        eles.grouping.nodes().forEach(function (node) {
-
-            node.removeListener('cxttap');
-            node.on('cxttap', function (e) {
-                e.stopPropagation();
-            });
-        });
-        eles.grouped.nodes().forEach(function (node) {
-
-            node.removeListener('cxttap');
-            node.on('cxttap', function (e) {
-                collapseGroupFromNode(e.target);
-                e.stopPropagation();
-            });
-        });
-    } else if (position == 'intermediate') {
-        if (init) {
-            throw new Error("Init true on intermediate group");
-        }
         eles.grouping.nodes().forEach(function (node) {
 
             node.removeListener('cxttap');
@@ -333,6 +256,47 @@ function assignHandler(group_tree, init = false) {
 
             node.removeListener('cxttap');
             node.on('cxttap', function (e) {
+                collapseGroupFromNode(e.target);
+                e.stopPropagation();
+            });
+        });
+    } else if (position == 'tree_head') {
+
+        eles.grouping.nodes().forEach(function (node) {
+
+            node.removeListener('cxttap');
+            node.on('cxttap', function (e) {
+                expandGroupFromNode(e.target);
+                e.stopPropagation();
+            });
+        });
+        eles.grouped.nodes().forEach(function (node) {
+
+            node.removeListener('cxttap');
+            node.on('cxttap', function (e) {
+                if (e.target.selected()) {
+                    expandGroupFromNode(e.target);
+                } else {
+                    collapseGroupFromNode(e.target);
+                }
+                e.stopPropagation();
+            });
+        });
+
+    } else if (position == 'leaf') {
+        eles.grouped.nodes().forEach(function (node) {
+            node.removeListener('cxttap');
+            node.on('cxttap', function (e) {
+                collapseGroupFromNode(e.target);
+                e.stopPropagation();
+            });
+        });
+    } else if (position == 'intermediate') {
+        eles.grouped.nodes().forEach(function (node) {
+
+            node.removeListener('cxttap');
+            node.on('cxttap', function (e) {
+                collapseGroupFromNode(e.target);
                 e.stopPropagation();
             });
         });
@@ -399,24 +363,33 @@ function calcAllGroups(cy, group_tree_array) {
 
 function printTree(group_tree_array, level) {
     for (var group_tree of group_tree_array) {
-        console.log(level + "name: " + group_tree.name);
-        console.log(level + "grouping: ");
-        group_tree.eles.grouping.nodes().filter(function(node){
+        console.debug(level + "name: " + group_tree.name);
+        console.debug(level + "grouping: ");
+        group_tree.eles.grouping.nodes().filter(function (node) {
             return node.data('type') == "ProcessGroup" || node.data('type') == "Process";
         }).forEach(function (node) {
-            console.log(level + " * " + node.data('name'));
+            console.debug(level + " * " + node.data('name'));
         })
-        console.log(level + "grouped: ");
-        group_tree.eles.grouped.nodes().filter(function(node){
+        console.debug(level + "grouped: ");
+        group_tree.eles.grouped.nodes().filter(function (node) {
             return node.data('type') == "ProcessGroup" || node.data('type') == "Process";
         }).forEach(function (node) {
-            console.log(level + " * " + node.data('name'));
+            console.debug(level + " * " + node.data('name'));
         })
         if (group_tree.group_objs != undefined) {
             printTree(group_tree.group_objs, level + "--");
         }
     }
 
+}
+
+function assignAllHandlers(group_tree_array) {
+    for (var group_tree of group_tree_array) {
+        assignHandler(group_tree);
+        if (group_tree.group_objs != undefined) {
+            assignAllHandlers(group_tree.group_objs);
+        }
+    }
 }
 export function groupNodes(cy) {
 
@@ -425,10 +398,7 @@ export function groupNodes(cy) {
     calcAllGroups(cy, group_tree_array);
     printTree(group_tree_array, "--");
 
-    for (var group_tree of group_tree_array) {
-        // assign handler only to heads
-        assignHandler(group_tree, true);
-    }
+    assignAllHandlers(group_tree_array);
 
 }
 

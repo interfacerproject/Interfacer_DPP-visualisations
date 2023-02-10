@@ -91,6 +91,6 @@ export function hideTippy(node) {
   }
 }
 
-export function hideAllTippies(cy) {
-  cy.nodes().forEach(hideTippy);
+export function hideAllTippies(eles) {
+  eles.nodes().forEach(hideTippy);
 }

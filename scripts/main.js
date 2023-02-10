@@ -35,7 +35,7 @@ var headless = false;
 console.log("Reading file " + file);
 fetch(file)
   .then(function (response) {
-    console.log("Reading file done");
+    console.debug("Reading file done");
     return (response.json());
   })
   .then(data => setup(data, headless, 'cyto'));
