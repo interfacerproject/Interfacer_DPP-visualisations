@@ -20,35 +20,36 @@ from if_utils import differentiate_resources, flatten_dict
 from if_dpp import convert_bedpp
 
 
-def make_cyto(dpp_item, cito_graph, assigned_nodes, assigned_users, do_users):
+def make_cyto(dpp_item, cito_graph, assigned_nodes, assigned_users, do_users, compact, pending_edge):
 
-    if do_users and 'provider' in dpp_item:
-        # id = dpp_item['id'] + dpp_item['provider']['id']
-        id = dpp_item['provider']['id']
-        if not id in assigned_users:
-            user = {'data': {k: v for k, v in flatten_dict(
-                dpp_item['provider']).items()}}
-            user['data']['id'] = id
-            cito_graph['nodes'].append(user)
-            assigned_users.add(id)
-        data = {'data': {}}
-        data['data']['source'] = id
-        data['data']['target'] = dpp_item['id']
-        cito_graph["edges"].append(data)
-
-    if do_users and 'receiver' in dpp_item:
-        # id = dpp_item['id'] + dpp_item['receiver']['id']
-        id = dpp_item['receiver']['id']
-        if not id in assigned_users:
-            user = {'data': {k: v for k, v in flatten_dict(
-                dpp_item['receiver']).items()}}
-            user['data']['id'] = id
-            cito_graph['nodes'].append(user)
-            assigned_users.add(id)
-        data = {'data': {}}
-        data['data']['source'] = dpp_item['id']
-        data['data']['target'] = id
-        cito_graph["edges"].append(data)
+    if do_users:
+        if 'provider' in dpp_item:
+        
+            # id = dpp_item['id'] + dpp_item['provider']['id']
+            id = dpp_item['provider']['id']
+            if not id in assigned_users:
+                user = {'data': {k: v for k, v in flatten_dict(
+                    dpp_item['provider']).items()}}
+                user['data']['id'] = id
+                cito_graph['nodes'].append(user)
+                assigned_users.add(id)
+            data = {'data': {}}
+            data['data']['source'] = id
+            data['data']['target'] = dpp_item['id']
+            cito_graph["edges"].append(data)
+        elif 'receiver' in dpp_item:
+            # id = dpp_item['id'] + dpp_item['receiver']['id']
+            id = dpp_item['receiver']['id']
+            if not id in assigned_users:
+                user = {'data': {k: v for k, v in flatten_dict(
+                    dpp_item['receiver']).items()}}
+                user['data']['id'] = id
+                cito_graph['nodes'].append(user)
+                assigned_users.add(id)
+            data = {'data': {}}
+            data['data']['source'] = dpp_item['id']
+            data['data']['target'] = id
+            cito_graph["edges"].append(data)
 
     if not dpp_item['id'] in assigned_nodes:
 
@@ -58,38 +59,60 @@ def make_cyto(dpp_item, cito_graph, assigned_nodes, assigned_users, do_users):
             origin = False
         assigned_nodes.add(dpp_item['id'])
         # breakpoint()
-        data = {'data': {k: v for k, v in flatten_dict(
-            dpp_item).items() if k not in ['children']}}
-        data['data']['origin'] = origin
+        if (compact and (dpp_item['type'] ==  "EconomicResource" or dpp_item['type'] ==  "Process")) or not compact:
+            data = {'data': {k: v for k, v in flatten_dict(
+                dpp_item).items() if k not in ['children']}}
+            data['data']['origin'] = origin
 
-        cito_graph['nodes'].append(data)
+            cito_graph['nodes'].append(data)
+        if compact and (dpp_item['type'] ==  "EconomicResource" or dpp_item['type'] ==  "Process"):
+            if pending_edge['target'] == None:
+                pending_edge['target'] = dpp_item['id']
+            else:
+                pending_edge['source'] = dpp_item['id']
+                data = {'data': {
+                    'source' : pending_edge['source'],
+                    'target' : pending_edge['target'],
+                }}
+                cito_graph["edges"].append(data)
+                pending_edge = {
+                    'target': dpp_item['id']
+                }
 
-    # if 'provider' in dpp_item:
-    #     data = {'data': {}}
-    #     data['data']['source'] = dpp_item['provider']
-    #     data['data']['target'] = dpp_item['id']
-    #     cito_graph["edges"].append(data)
-    # if 'receiver' in dpp_item:
-    #     data = {'data': {}}
-    #     data['data']['source'] = dpp_item['receiver']
-    #     data['data']['target'] = dpp_item['id']
-    #     cito_graph["edges"].append(data)
 
     nr_ch = len(dpp_item['children'])
     for ch in range(nr_ch):
         ch_dpp = dpp_item['children'][ch]
-        data = {'data': {}}
-        data['data']['source'] = ch_dpp['id']
-        data['data']['target'] = dpp_item['id']
+        if not compact:
+            data = {'data': {}}
+            data['data']['source'] = ch_dpp['id']
+            data['data']['target'] = dpp_item['id']
 
-        cito_graph["edges"].append(data)
+            cito_graph["edges"].append(data)
 
         make_cyto(ch_dpp, cito_graph, assigned_nodes=assigned_nodes,
-                  assigned_users=assigned_users, do_users=do_users)
+                  assigned_users=assigned_users, do_users=do_users, compact=compact, pending_edge=pending_edge)
     return
 
+def consolidate_edges(first_id, second_id, remove_ids, edges):
+    for i, edge in enumerate(edges):
+        if edge['data']['source'] in remove_ids and edge['data']['target'] in remove_ids:
+            breakpoint()
+            del edges[i]
+        elif edge['data']['source'] in remove_ids:
+            breakpoint()
+            edge['data']['source'] = first_id
+        elif edge['data']['target'] in remove_ids:
+            breakpoint()
+            edge['data']['target'] = second_id
 
-def main(trace_file, group_file, do_users, add_as_data, add_as_node):
+
+
+def main(trace_file, group_file, do_users, add_as_data, add_as_node, compact):
+
+    if compact:
+        # we are showing less nodes so no user nodes
+        do_users = False
 
     with open(trace_file, 'r') as f:
         a_dpp = json.loads(f.read())
@@ -111,8 +134,14 @@ def main(trace_file, group_file, do_users, add_as_data, add_as_node):
     }
     assigned_nodes = set()
     assigned_users = set()
-    make_cyto(tot_dpp, cito_graph['elements'], assigned_nodes, assigned_users, do_users)
+    pending_edge = {
+        'source': None,
+        'target': None
+    }
+    make_cyto(tot_dpp, cito_graph['elements'], assigned_nodes, assigned_users, do_users, compact, pending_edge)
 
+    nodes = cito_graph['elements']['nodes']
+    edges = cito_graph['elements']['edges']
     # Take care of the groups
     groups = {}
     if group_file is not None:
@@ -120,7 +149,6 @@ def main(trace_file, group_file, do_users, add_as_data, add_as_node):
             groups = json.loads(f.read())
         # innefficient but should do
         if groups != {}:
-            nodes = cito_graph['elements']['nodes']
             for key in groups.keys():
                 group = groups[key]
                 grp_data = {k: v for k,v in flatten_dict(group).items()}
@@ -130,10 +158,30 @@ def main(trace_file, group_file, do_users, add_as_data, add_as_node):
                         for node in nodes:
                             if node['data']['id'] == child:
                                 node['data']['parent'] = group['id']
+                                break
                 if add_as_data:
                     cito_graph['groups'].append(grp_data)
 
     # breakpoint()
+    if compact:
+        first_id = second_id = None
+        remove_ids = []
+        for i, node in enumerate(nodes):
+            if node['data']['type'] ==  "EconomicResource" or node['data']['type'] ==  "Process":
+                if first_id == None:
+                    first_id = node['data']['id']
+                else:
+                    # found a target
+                    # breakpoint()
+                    second_id = node['data']['id']
+                    consolidate_edges(first_id, second_id, remove_ids, edges)
+                    first_id = second_id = None
+                    remove_ids = []
+            else:
+                remove_ids.append(node['data']['id'])
+                # pop the node
+                del nodes[i]
+
     cyto_file = 'dpp.cyto.json'
     with open(cyto_file, 'w') as f:
         f.write(json.dumps(cito_graph, indent=2))
@@ -148,6 +196,13 @@ if __name__ == "__main__":
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
+    parser.add_argument(
+        '-c', '--compact',
+        dest='compact',
+        action='store_true',
+        default=False,
+        help='specifies whether to compact the nodes',
+    )
     parser.add_argument(
         '-d', '--add_as_data',
         dest='add_as_data',
@@ -187,8 +242,8 @@ if __name__ == "__main__":
         dest='users',
         action='store_true',
         default=False,
-        help='specifies whether to include users',
+        help='specifies whether to include users as nodes',
     )
     args, unknown = parser.parse_known_args()
 
-    main(args.filename[0], args.groups[0], args.users, args.add_as_data, args.add_as_node)
+    main(args.filename[0], args.groups[0], args.users, args.add_as_data, args.add_as_node, args.compact)

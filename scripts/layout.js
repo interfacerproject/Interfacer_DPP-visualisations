@@ -23,6 +23,19 @@ import { cy, headless } from './setup.js';
 var layout_params = {};
 var layout = {};
 
+function make_label(node){
+    let label;
+    switch (node.data('type')) {
+        case 'EconomicResource':
+            label = node.data('name') + "\n" + "\u25A3" + " ";
+            if (node.data('primaryAccountable.name') != node.data('custodian.name')){
+                label = label + node.data('primaryAccountable.name') + "(" + node.data('custodian.name') + ")";
+            } else {
+                label = label + node.data('primaryAccountable.name');
+            }
+    }
+    return label;
+}
 
 export function node_properties(node) {
     // # Hexadecimal color specification 
@@ -35,7 +48,7 @@ export function node_properties(node) {
         case 'EconomicResource':
             prop = {
                 color: '',
-                label: node.data('name') || "",
+                label: make_label(node),
                 shape: 'ellipse',
                 width: 40,
                 height: 40,
@@ -162,8 +175,10 @@ const node_edge_style = [ // the stylesheet for the graph
             },
             'font-size': '25px',
             'font-style': 'normal',
-            // 'text-wrap': 'ellipsis',
-            'text-max-width': '75px',
+            'text-wrap': 'wrap',
+            'text-justification': 'center',
+            'text-max-width': '1075px',
+            'font-family': 'FontAwesome, Arial, Helvetica, sans-serif',
             'label': function (node) {
                 return node_properties(node).label;
             },
