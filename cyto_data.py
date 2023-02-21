@@ -19,6 +19,14 @@ import json
 from if_utils import differentiate_resources, flatten_dict
 from if_dpp import convert_bedpp
 
+def to_compact(dpp_item):
+    if dpp_item['type'] ==  "EconomicResource" or dpp_item['type'] ==  "Process":
+        return True
+    if dpp_item['type'] == "EconomicEvent":
+        action = dpp_item['action']['id']
+        if action in ["transfer", "transferAllRights", "transferCustody"]:
+            return True
+    return False
 
 def make_cyto(dpp_item, cito_graph, assigned_nodes, assigned_users, do_users, compact, pending_edge):
 
@@ -59,13 +67,13 @@ def make_cyto(dpp_item, cito_graph, assigned_nodes, assigned_users, do_users, co
             origin = False
         assigned_nodes.add(dpp_item['id'])
         # breakpoint()
-        if (compact and (dpp_item['type'] ==  "EconomicResource" or dpp_item['type'] ==  "Process")) or not compact:
+        if (compact and to_compact(dpp_item)) or not compact:
             data = {'data': {k: v for k, v in flatten_dict(
                 dpp_item).items() if k not in ['children']}}
             data['data']['origin'] = origin
 
             cito_graph['nodes'].append(data)
-        if compact and (dpp_item['type'] ==  "EconomicResource" or dpp_item['type'] ==  "Process"):
+        if compact and to_compact(dpp_item):
             if pending_edge['target'] == None:
                 pending_edge['target'] = dpp_item['id']
             else:
@@ -93,19 +101,6 @@ def make_cyto(dpp_item, cito_graph, assigned_nodes, assigned_users, do_users, co
         make_cyto(ch_dpp, cito_graph, assigned_nodes=assigned_nodes,
                   assigned_users=assigned_users, do_users=do_users, compact=compact, pending_edge=pending_edge)
     return
-
-def consolidate_edges(first_id, second_id, remove_ids, edges):
-    for i, edge in enumerate(edges):
-        if edge['data']['source'] in remove_ids and edge['data']['target'] in remove_ids:
-            breakpoint()
-            del edges[i]
-        elif edge['data']['source'] in remove_ids:
-            breakpoint()
-            edge['data']['source'] = first_id
-        elif edge['data']['target'] in remove_ids:
-            breakpoint()
-            edge['data']['target'] = second_id
-
 
 
 def main(trace_file, group_file, do_users, add_as_data, add_as_node, compact):
@@ -163,24 +158,6 @@ def main(trace_file, group_file, do_users, add_as_data, add_as_node, compact):
                     cito_graph['groups'].append(grp_data)
 
     # breakpoint()
-    if compact:
-        first_id = second_id = None
-        remove_ids = []
-        for i, node in enumerate(nodes):
-            if node['data']['type'] ==  "EconomicResource" or node['data']['type'] ==  "Process":
-                if first_id == None:
-                    first_id = node['data']['id']
-                else:
-                    # found a target
-                    # breakpoint()
-                    second_id = node['data']['id']
-                    consolidate_edges(first_id, second_id, remove_ids, edges)
-                    first_id = second_id = None
-                    remove_ids = []
-            else:
-                remove_ids.append(node['data']['id'])
-                # pop the node
-                del nodes[i]
 
     cyto_file = 'dpp.cyto.json'
     with open(cyto_file, 'w') as f:

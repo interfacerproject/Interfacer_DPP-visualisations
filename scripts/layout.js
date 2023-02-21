@@ -33,6 +33,20 @@ function make_label(node){
             } else {
                 label = label + node.data('primaryAccountable.name');
             }
+            break;
+        case 'EconomicEvent':
+            switch (node.data('name')) {
+                case 'transfer': case 'transferCustody': case 'transferAllRights':
+                    label = node.data('name') + "\n" + node.data('provider.name') + " -> " + node.data('receiver.name');
+                    break;
+                default:
+                    label = node.data('name')
+                    break;
+            }
+            break;
+        default:
+            label = node.data('name')
+            break;
     }
     return label;
 }
@@ -87,7 +101,7 @@ export function node_properties(node) {
             }
             prop = {
                 color: color,
-                label: node.data('name') || "",
+                label: make_label(node),
                 shape: 'rectangle',
                 width: 40,
                 height: 40,
@@ -108,7 +122,7 @@ export function node_properties(node) {
         case 'Process':
             prop = {
                 color: '#21897E',
-                label: node.data('name') || "",
+                label: make_label(node),
                 shape: 'diamond',
                 width: 40,
                 height: 40,
@@ -120,7 +134,7 @@ export function node_properties(node) {
         case 'ProcessGroup':
             prop = {
                 color: '#21897E',
-                label: node.data('name') || "",
+                label: make_label(node),
                 shape: 'diamond',
                 width: 60,
                 height: 60,
@@ -132,7 +146,7 @@ export function node_properties(node) {
         case 'Person':
             prop = {
                 color: '#000000',
-                label: node.data('name') || "",
+                label: make_label(node),
                 shape: 'triangle',
                 width: 40,
                 height: 40,
