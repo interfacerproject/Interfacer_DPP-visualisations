@@ -102,15 +102,11 @@ def make_cyto(dpp_item, cito_graph, assigned_nodes, assigned_users, do_users, co
                   assigned_users=assigned_users, do_users=do_users, compact=compact, pending_edge=pending_edge)
     return
 
-
-def main(trace_file, group_file, do_users, add_as_data, add_as_node, compact):
+def main_no_files(a_dpp, groups, do_users, add_as_data, add_as_node, compact):
 
     if compact:
         # we are showing less nodes so no user nodes
         do_users = False
-
-    with open(trace_file, 'r') as f:
-        a_dpp = json.loads(f.read())
 
     if 'node' in a_dpp:
         tot_dpp = convert_bedpp(a_dpp)
@@ -145,26 +141,38 @@ def main(trace_file, group_file, do_users, add_as_data, add_as_node, compact):
     nodes = cito_graph['elements']['nodes']
     edges = cito_graph['elements']['edges']
     # Take care of the groups
+    # innefficient but should do
+    if groups != {}:
+        for key in groups.keys():
+            group = groups[key]
+            grp_data = {k: v for k,v in flatten_dict(group).items()}
+            if add_as_node:
+                cito_graph['elements']['nodes'].append({'data': grp_data})
+                for child in group['groups']:
+                    for node in nodes:
+                        if node['data']['id'] == child:
+                            node['data']['parent'] = group['id']
+                            break
+            if add_as_data:
+                cito_graph['groups'].append(grp_data)
+
+    # breakpoint()
+
+    return cito_graph
+
+
+
+def main(trace_file, group_file, do_users, add_as_data, add_as_node, compact):
+
+    with open(trace_file, 'r') as f:
+        a_dpp = json.loads(f.read())
+
     groups = {}
     if group_file is not None:
         with open(group_file, 'r') as f:
             groups = json.loads(f.read())
-        # innefficient but should do
-        if groups != {}:
-            for key in groups.keys():
-                group = groups[key]
-                grp_data = {k: v for k,v in flatten_dict(group).items()}
-                if add_as_node:
-                    cito_graph['elements']['nodes'].append({'data': grp_data})
-                    for child in group['groups']:
-                        for node in nodes:
-                            if node['data']['id'] == child:
-                                node['data']['parent'] = group['id']
-                                break
-                if add_as_data:
-                    cito_graph['groups'].append(grp_data)
 
-    # breakpoint()
+    cito_graph = main_no_files(a_dpp, groups, do_users, add_as_data, add_as_node, compact)
 
     cyto_file = 'dpp.cyto.json'
     with open(cyto_file, 'w') as f:
@@ -201,7 +209,7 @@ if __name__ == "__main__":
         type=text_type,
         nargs=1,
         default='',
-        help='specifies the name of the dpp file',
+        help='specifies the name of the trace file',
     )
 
     parser.add_argument(
