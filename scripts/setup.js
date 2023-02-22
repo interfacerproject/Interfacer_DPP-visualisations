@@ -52,7 +52,10 @@ export function setup(data, headless, elementId) {
 
     elements: data.elements,
 
-    data: { groups: data.groups },
+    data: { 
+      groups: data.groups,
+      flags: data.flags
+     },
 
     // initial viewport state:
     zoom: 1,

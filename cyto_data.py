@@ -125,14 +125,21 @@ def main(trace_file, group_file, do_users, add_as_data, add_as_node, compact):
             "nodes": [],
             "edges": []
         },
-        "groups": []
+        "groups": [],
+        "flags": [],
     }
     assigned_nodes = set()
     assigned_users = set()
-    pending_edge = {
-        'source': None,
-        'target': None
-    }
+
+    if compact:
+        pending_edge = {
+            'source': None,
+            'target': None
+        }
+        cito_graph['flags'].append('compact')
+    else:
+        pending_edge = {}
+
     make_cyto(tot_dpp, cito_graph['elements'], assigned_nodes, assigned_users, do_users, compact, pending_edge)
 
     nodes = cito_graph['elements']['nodes']
