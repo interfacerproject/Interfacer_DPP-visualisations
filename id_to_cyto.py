@@ -1,7 +1,8 @@
 import json
 
-from if_dpp import er_before
+from if_dpp import er_before, get_dpp, convert_bedpp
 from cyto_data import main_no_files
+from if_groups import find_procgrp
 
 ENDPOINT = 'http://zenflows-debug.interfacer.dyne.org/api'
 CYTO_FILE = 'dpp.cyto.json'
@@ -14,17 +15,23 @@ USERS_DATA = {
         }
     }
 }
-def main(id, do_users, add_as_data, compact):
+def main(id, do_users, do_server, add_groups, compact):
 
     print(f"Resource to be traced: {id}")
-    tot_dpp = []
     visited = set()
-    er_before(id, USERS_DATA['designer2'], dpp_children=tot_dpp, depth=0, visited=visited, endpoint=ENDPOINT)
+    
+    if do_server:
+        a_dpp = get_dpp(id, USERS_DATA['designer2'], endpoint=ENDPOINT)
+        tot_dpp = convert_bedpp(a_dpp)
+    else:
+        a_dpp = []
+        er_before(id, USERS_DATA['designer2'], dpp_children=a_dpp, depth=0, visited=visited, endpoint=ENDPOINT)
+        tot_dpp = a_dpp[0]
 
-    groups = {}
-
-    cito_graph = main_no_files(tot_dpp, groups, do_users=do_users, add_as_data=add_as_data, add_as_node=False, compact=compact)
-
+    processgrp_data = {}
+    find_procgrp(tot_dpp, processgrp_data, USERS_DATA['designer2'], endpoint=ENDPOINT)
+    # breakpoint()
+    cito_graph = main_no_files(tot_dpp, processgrp_data, do_users=do_users, add_groups=add_groups, compact=compact)
 
     with open(CYTO_FILE, 'w') as f:
         f.write(json.dumps(cito_graph, indent=2))
@@ -40,18 +47,19 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        '-a', '--add_groups',
+        dest='add_groups',
+        action='store_true',
+        default=False,
+        help='specifies whether to add groups to the graph',
+    )
+
+    parser.add_argument(
         '-c', '--compact',
         dest='compact',
         action='store_true',
         default=False,
         help='specifies whether to compact the nodes',
-    )
-    parser.add_argument(
-        '-d', '--add_as_data',
-        dest='add_as_data',
-        action='store_true',
-        default=False,
-        help='specifies whether to add group info as graph data',
     )
 
     parser.add_argument(
@@ -62,6 +70,13 @@ if __name__ == "__main__":
         default=[None],
         help='specifies the name of the id to generate the DPP for',
     )
+    parser.add_argument(
+        '-s', '--server_trace',
+        dest='do_server',
+        action='store_true',
+        default=False,
+        help='specifies whether to add group info as graph data',
+    )
 
     parser.add_argument(
         '-u', '--users',
@@ -71,5 +86,5 @@ if __name__ == "__main__":
         help='specifies whether to include users as nodes',
     )
     args, unknown = parser.parse_known_args()
-
-    main(args.id[0], args.users, args.add_as_data, args.compact)
+    
+    main(args.id[0], args.users, args.do_server, args.add_groups, args.compact)

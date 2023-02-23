@@ -102,16 +102,11 @@ def make_cyto(dpp_item, cito_graph, assigned_nodes, assigned_users, do_users, co
                   assigned_users=assigned_users, do_users=do_users, compact=compact, pending_edge=pending_edge)
     return
 
-def main_no_files(a_dpp, groups, do_users, add_as_data, add_as_node, compact):
+def main_no_files(tot_dpp, groups, do_users, add_groups, compact):
 
     if compact:
         # we are showing less nodes so no user nodes
         do_users = False
-
-    if 'node' in a_dpp:
-        tot_dpp = convert_bedpp(a_dpp)
-    else:
-        tot_dpp = a_dpp[0]
 
     # breakpoint()
     differentiate_resources(tot_dpp)
@@ -140,21 +135,13 @@ def main_no_files(a_dpp, groups, do_users, add_as_data, add_as_node, compact):
 
     nodes = cito_graph['elements']['nodes']
     edges = cito_graph['elements']['edges']
+    
     # Take care of the groups
-    # innefficient but should do
-    if groups != {}:
+    if add_groups and groups != {}:
         for key in groups.keys():
             group = groups[key]
             grp_data = {k: v for k,v in flatten_dict(group).items()}
-            if add_as_node:
-                cito_graph['elements']['nodes'].append({'data': grp_data})
-                for child in group['groups']:
-                    for node in nodes:
-                        if node['data']['id'] == child:
-                            node['data']['parent'] = group['id']
-                            break
-            if add_as_data:
-                cito_graph['groups'].append(grp_data)
+            cito_graph['groups'].append(grp_data)
 
     # breakpoint()
 
@@ -162,17 +149,22 @@ def main_no_files(a_dpp, groups, do_users, add_as_data, add_as_node, compact):
 
 
 
-def main(trace_file, group_file, do_users, add_as_data, add_as_node, compact):
+def main(trace_file, group_file, do_users, add_groups, compact):
 
     with open(trace_file, 'r') as f:
         a_dpp = json.loads(f.read())
+
+    if 'node' in a_dpp:
+        tot_dpp = convert_bedpp(a_dpp)
+    else:
+        tot_dpp = a_dpp[0]
 
     groups = {}
     if group_file is not None:
         with open(group_file, 'r') as f:
             groups = json.loads(f.read())
 
-    cito_graph = main_no_files(a_dpp, groups, do_users, add_as_data, add_as_node, compact)
+    cito_graph = main_no_files(tot_dpp, groups, do_users, add_groups, compact)
 
     cyto_file = 'dpp.cyto.json'
     with open(cyto_file, 'w') as f:
@@ -189,18 +181,19 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        '-a', '--add_groups',
+        dest='add_groups',
+        action='store_true',
+        default=False,
+        help='specifies whether to add groups to the graph',
+    )
+
+    parser.add_argument(
         '-c', '--compact',
         dest='compact',
         action='store_true',
         default=False,
         help='specifies whether to compact the nodes',
-    )
-    parser.add_argument(
-        '-d', '--add_as_data',
-        dest='add_as_data',
-        action='store_true',
-        default=False,
-        help='specifies whether to add group info as graph data',
     )
 
     parser.add_argument(
@@ -218,15 +211,7 @@ if __name__ == "__main__":
         type=text_type,
         nargs=1,
         default=[None],
-        help='specifies the name of the file specifying the groups',
-    )
-
-    parser.add_argument(
-        '-n', '--add_as_node',
-        dest='add_as_node',
-        action='store_true',
-        default=False,
-        help='specifies whether to add group info as nodes',
+        help='the name of the file specifying the groups',
     )
 
     parser.add_argument(
@@ -238,4 +223,4 @@ if __name__ == "__main__":
     )
     args, unknown = parser.parse_known_args()
 
-    main(args.filename[0], args.groups[0], args.users, args.add_as_data, args.add_as_node, args.compact)
+    main(args.filename[0], args.groups[0], args.users, args.add_groups, args.compact)
