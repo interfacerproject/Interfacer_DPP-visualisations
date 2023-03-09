@@ -16,8 +16,8 @@
 
 import json
 
-from if_utils import differentiate_resources, flatten_dict
-from if_dpp import convert_bedpp
+from if_utils import flatten_dict
+from if_dpp import differentiate_resources, convert_bedpp
 
 def to_compact(dpp_item):
     if dpp_item['type'] ==  "EconomicResource" or dpp_item['type'] ==  "Process":
@@ -133,8 +133,8 @@ def main_no_files(tot_dpp, groups, do_users, add_groups, compact):
 
     make_cyto(tot_dpp, cito_graph['elements'], assigned_nodes, assigned_users, do_users, compact, pending_edge)
 
-    nodes = cito_graph['elements']['nodes']
-    edges = cito_graph['elements']['edges']
+    # nodes = cito_graph['elements']['nodes']
+    # edges = cito_graph['elements']['edges']
     
     # Take care of the groups
     if add_groups and groups != {}:
@@ -153,11 +153,13 @@ def main(trace_file, group_file, do_users, add_groups, compact):
 
     with open(trace_file, 'r') as f:
         a_dpp = json.loads(f.read())
+        a_dpp = a_dpp[0]
 
+    # breakpoint()
     if 'node' in a_dpp:
         tot_dpp = convert_bedpp(a_dpp)
     else:
-        tot_dpp = a_dpp[0]
+        tot_dpp = a_dpp
 
     groups = {}
     if group_file is not None:

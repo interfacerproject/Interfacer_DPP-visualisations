@@ -17,8 +17,7 @@
 import plotly.graph_objects as go
 import json
 
-from if_utils import differentiate_resources
-from if_dpp import convert_bedpp
+from if_dpp import convert_bedpp, differentiate_resources
 from if_graphics import make_sankey, vis_dpp, consol_trace
 
 

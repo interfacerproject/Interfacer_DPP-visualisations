@@ -22,6 +22,7 @@ def main(id, do_users, do_server, add_groups, compact):
     
     if do_server:
         a_dpp = get_dpp(id, USERS_DATA['designer2'], endpoint=ENDPOINT)
+        a_dpp = a_dpp[0]
         tot_dpp = convert_bedpp(a_dpp)
     else:
         a_dpp = []
