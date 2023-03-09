@@ -36,7 +36,7 @@ def main(id, do_users, do_server, add_groups, compact):
 
     with open(CYTO_FILE, 'w') as f:
         f.write(json.dumps(cito_graph, indent=2))
-    # print(f'{CYTO_FILE} written.')
+    print(f'{CYTO_FILE} written.')
 
 if __name__ == "__main__":
     import argparse
