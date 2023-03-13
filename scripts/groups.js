@@ -37,7 +37,28 @@ var group_tree_array = [];
 //    ext_edges: Collection of edges that have to be reinserted when node is expanded
 //    }
 
+function calcInBetween(comp1, comp2) {
+    let in1 = comp1.incomers().nodes().filter(function (node) {
+        return (node.data('type') == 'EconomicResource');
+    });
+    let out1 = comp1.outgoers().nodes().filter(function (node) {
+        return (node.data('type') == 'EconomicResource');
+    });
+    let in2 = comp2.incomers().nodes().filter(function (node) {
+        return (node.data('type') == 'EconomicResource');
+    });
+    let out2 = comp2.outgoers().nodes().filter(function (node) {
+        return (node.data('type') == 'EconomicResource');
+    });
 
+    let inBetween = in1.intersection(out2).union(out1.intersection(in2));
+
+    return inBetween;
+    // return comp1.neighborhood().filter(function (ele) {
+    //     return (ele.isNode() && ele.data('type') != 'Person');
+    // }).intersection(comp2.neighborhood());
+
+}
 function calcGroups(cy, grouping_data) {
 
     // all elements in the graph
@@ -76,9 +97,7 @@ function calcGroups(cy, grouping_data) {
             for (var j = i + 1; j <= components.length - 1; j++) {
                 // intersect the neighborhoods 
                 // avoid including Persons in the group
-                var in_between_nodes = components[i].neighborhood().filter(function (ele) {
-                    return (ele.isNode() && ele.data('type') != 'Person');
-                }).intersection(components[j].neighborhood());
+                var in_between_nodes = calcInBetween(components[i], components[j]);
                 if (in_between_nodes.length > 0) {
                     grouped_nodes = grouped_nodes.union(in_between_nodes)
                 }
