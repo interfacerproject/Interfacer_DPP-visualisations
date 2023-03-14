@@ -30,7 +30,8 @@ var group_tree_array = [];
 // --- groupedIn: parent group
 // --- groups: array of ids e.g. ['0633PG8FT49NGPX00TRSZM7K8W', '0633PG8BMRA60VJAAT8YFQYX1M'], either Processes or ProcessGroups
 // Object structure containing the parent and children nodes:
-// --- group_objs: Array of objects that corresponds to the ids in attribute "groups" and have the same structure as this object
+// --- group_objs: Array of objects that corresponds to the ids in attribute "groups" ONLY if they are ProcessGroups 
+//      and have the same structure as this object
 // --- eles: {
 //    grouping: Collection of elements that have to be present when node is grouped and removed when it is expanded,
 //    grouped: Collection of elements that have to be hidden when grouped and visible when expanded,
@@ -69,8 +70,8 @@ function calcGroups(cy, grouping_data) {
 
     const items = grouping_data.groups;
     if (items.length < 2) {
-        console.warn("Groups has less than 2 elements");
-        return;
+        console.warn("Group " + grouping_data.name + " has " + items.length + " element");
+        // return ;
     }
     // find and add the grouped nodes to the collection
     for (const item of items) {
@@ -95,8 +96,7 @@ function calcGroups(cy, grouping_data) {
     if (components.length > 1) {
         for (var i = 0; i < components.length - 1; i++) {
             for (var j = i + 1; j <= components.length - 1; j++) {
-                // intersect the neighborhoods 
-                // avoid including Persons in the group
+                // Calculate nodes in between components
                 var in_between_nodes = calcInBetween(components[i], components[j]);
                 if (in_between_nodes.length > 0) {
                     grouped_nodes = grouped_nodes.union(in_between_nodes)
@@ -124,12 +124,12 @@ function calcGroups(cy, grouping_data) {
     var sources = [];
     var targets = [];
     // examine each external edge to rewire it to the grouped node
-    console.debug("-- Parent " + grouping_data.name);
+    // console.debug("-- Parent " + grouping_data.name);
     for (const edge of ext_edges) {
         var grouping_edge_json = undefined;
         var node_source = edge.source();
         var node_target = edge.target();
-        console.debug("-- * Edge with source " + node_source.data('name') + " and target " + node_target.data('name'));
+        // console.debug("-- * Edge with source " + node_source.data('name') + " and target " + node_target.data('name'));
         if (grouped_nodes.contains(node_source)) {
             // The external edge is from a grouped node,
             // change its source to the grouped node
@@ -188,7 +188,11 @@ function calcAllGroups(cy, group_tree_array) {
 
         if (group_tree.group_objs == undefined) {
             group_tree.eles = calcGroups(cy, group_tree);
-            collapseGroup(group_tree.eles);
+            if (group_tree.eles != undefined) {
+                collapseGroup(group_tree.eles);
+            } else {
+                throw new Error("calcGroups returned undefined eles");
+            }
         } else {
             calcAllGroups(cy, group_tree.group_objs);
             group_tree.eles = calcGroups(cy, group_tree);
@@ -198,6 +202,9 @@ function calcAllGroups(cy, group_tree_array) {
 }
 
 function findParentNode(eles) {
+    if (eles == undefined) {
+        throw new Error("findParentNode called with undefined eles");
+    }
     var parent_node = eles.grouping.nodes();
     if (parent_node.length > 1) {
         throw new Error("More than one parent");
@@ -224,7 +231,7 @@ function findNode(node, group_tree_array, search_grouping) {
 }
 
 function findParentGroup(group_tree_array, grouping_data) {
-    // This functon (RECURSIVE) finds the parent
+    // This function (RECURSIVE) finds the parent
     // to append the child to
     for (var group of group_tree_array) {
         if (group.id == grouping_data.groupedIn) {
@@ -422,7 +429,7 @@ function assignAllHandlers(group_tree_array) {
 
 function createTree(cy) {
     // This function (NOT RECURSIVE) transform a list of object with links to each other
-    // in a tree structure with partent - children
+    // in a tree structure with parent - children
     const groups_data = cy.data().groups;
 
     var groups_len = groups_data.length;
@@ -447,20 +454,25 @@ function createTree(cy) {
 }
 
 function printTree(group_tree_array, level) {
+    // Print the tree contained in group_tree_array
+    // and if the structure of the nodes is present,
+    // also the nodes in the tree.
     for (var group_tree of group_tree_array) {
         console.debug(level + "name: " + group_tree.name);
-        console.debug(level + "grouping: ");
-        group_tree.eles.grouping.nodes().filter(function (node) {
-            return node.data('type') == "ProcessGroup" || node.data('type') == "Process";
-        }).forEach(function (node) {
-            console.debug(level + " * " + node.data('name'));
-        })
-        console.debug(level + "grouped: ");
-        group_tree.eles.grouped.nodes().filter(function (node) {
-            return node.data('type') == "ProcessGroup" || node.data('type') == "Process";
-        }).forEach(function (node) {
-            console.debug(level + " * " + node.data('name'));
-        })
+        if (group_tree.eles != undefined) {
+            console.debug(level + "grouping: ");
+            group_tree.eles.grouping.nodes().filter(function (node) {
+                return node.data('type') == "ProcessGroup" || node.data('type') == "Process";
+            }).forEach(function (node) {
+                console.debug(level + " * " + node.data('name'));
+            })
+            console.debug(level + "grouped: ");
+            group_tree.eles.grouped.nodes().filter(function (node) {
+                return node.data('type') == "ProcessGroup" || node.data('type') == "Process";
+            }).forEach(function (node) {
+                console.debug(level + " * " + node.data('name'));
+            })
+        }
         if (group_tree.group_objs != undefined) {
             printTree(group_tree.group_objs, level + "--");
         }
@@ -474,7 +486,8 @@ export function groupNodes(cy) {
 
     calcAllGroups(cy, group_tree_array);
 
-    printTree(group_tree_array, "--");
+    console.debug("Group Tree structure with elements");
+    printTree(group_tree_array, "++");
 
     assignAllHandlers(group_tree_array);
 
