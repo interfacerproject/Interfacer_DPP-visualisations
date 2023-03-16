@@ -15,32 +15,38 @@ USERS_DATA = {
         }
     }
 }
+
+
 def main(id, do_users, do_server, add_groups, compact):
 
     print(f"Resource to be traced: {id}")
     visited = set()
-    
+
     if do_server:
         a_dpp = get_dpp(id, USERS_DATA['designer2'], endpoint=ENDPOINT)
         a_dpp = a_dpp[0]
         tot_dpp = convert_bedpp(a_dpp)
     else:
         a_dpp = []
-        er_before(id, USERS_DATA['designer2'], dpp_children=a_dpp, depth=0, visited=visited, endpoint=ENDPOINT)
+        er_before(id, USERS_DATA['designer2'], dpp_children=a_dpp,
+                  depth=0, visited=visited, endpoint=ENDPOINT)
         tot_dpp = a_dpp[0]
 
     processgrp_data = {}
-    find_procgrp(tot_dpp, processgrp_data, USERS_DATA['designer2'], endpoint=ENDPOINT)
+    if add_groups:
+        find_procgrp(tot_dpp, processgrp_data,
+                     USERS_DATA['designer2'], endpoint=ENDPOINT)
     # breakpoint()
-    cito_graph = main_no_files(tot_dpp, processgrp_data, do_users=do_users, add_groups=add_groups, compact=compact)
+    cito_graph = main_no_files(
+        tot_dpp, processgrp_data, do_users=do_users, compact=compact)
 
     with open(CYTO_FILE, 'w') as f:
         f.write(json.dumps(cito_graph, indent=2))
     print(f'{CYTO_FILE} written.')
 
+
 if __name__ == "__main__":
     import argparse
-    from six import text_type
 
     parser = argparse.ArgumentParser(
         description=__doc__,
@@ -66,9 +72,8 @@ if __name__ == "__main__":
     parser.add_argument(
         '-i', '--id',
         dest='id',
-        type=text_type,
-        nargs=1,
-        default=[None],
+        action='store',
+        required=True,
         help='specifies the name of the id to generate the DPP for',
     )
     parser.add_argument(
@@ -76,7 +81,7 @@ if __name__ == "__main__":
         dest='do_server',
         action='store_true',
         default=False,
-        help='specifies whether to add group info as graph data',
+        help='specifies whether to use the server trace algo (otherwise the front-end algo)',
     )
 
     parser.add_argument(
@@ -87,5 +92,10 @@ if __name__ == "__main__":
         help='specifies whether to include users as nodes',
     )
     args, unknown = parser.parse_known_args()
-    
-    main(args.id[0], args.users, args.do_server, args.add_groups, args.compact)
+
+    if len(unknown) > 0:
+        print(f'Unknown options {unknown}')
+        parser.print_help()
+        exit(-1)
+
+    main(args.id, args.users, args.do_server, args.add_groups, args.compact)
