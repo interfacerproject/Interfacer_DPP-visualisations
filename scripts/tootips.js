@@ -15,17 +15,76 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-// TOOLTIP FUNCTIONS§§
+// TOOLTIP FUNCTIONS
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 import { createCustEl } from './utils.js';
-import { node_properties } from './layout.js';
+
+function edge_tootip(edge) {
+  var tooltip = {
+    'label': edge.data('name') || ""
+  }
+  return (tooltip);
+}
+
+function node_tooltip(node) {
+  var tooltip = null;
+  switch (node.data('type')) {
+    case 'EconomicResource':
+      tooltip = {
+        'trackingId': node.data('trackingIdentifier'),
+        'primaryAccountable': node.data('primaryAccountable.name'),
+        'custodian': node.data('custodian.name'),
+        'accountingQuantity': node.data('accountingQuantity.hasNumericalValue') + " " + node.data('accountingQuantity.hasUnit.symbol'),
+        'onhandQuantity': node.data('onhandQuantity.hasNumericalValue') + " " + node.data('onhandQuantity.hasUnit.symbol'),
+        "mappableAddress": node.data('currentLocation.mappableAddress'),
+        'lat': node.data('currentLocation.lat'),
+        'long': node.data('currentLocation.long')
+      };
+      break;
+    case 'EconomicEvent':
+      tooltip = {
+        'note': node.data('note'),
+        'hasPointInTime': node.data('hasPointInTime'),
+        'provider': node.data('provider.name'),
+        'receiver': node.data('receiver.name'),
+        'resourceQuantity': node.data('resourceQuantity.hasNumericalValue') != undefined ? node.data('resourceQuantity.hasNumericalValue') + " " + node.data('resourceQuantity.hasUnit.symbol') : null,
+        'effortQuantity': node.data('effortQuantity.hasNumericalValue') != undefined ? node.data('effortQuantity.hasNumericalValue') + " " + node.data('effortQuantity.hasUnit.symbol') : null,
+        "mappableAddress": node.data('toLocation.mappableAddress'),
+        'lat': node.data('toLocation.lat'),
+        'long': node.data('toLocation.long')
+
+      };
+      break;
+    case 'Process':
+      tooltip = {
+        'note': node.data('note')
+      };
+      break;
+    case 'ProcessGroup':
+      tooltip = {
+        'note': node.data('note')
+      };
+      break;
+    case 'Person':
+      tooltip = {
+        'note': node.data('note'),
+        "mappableAddress": node.data('primaryLocation.mappableAddress'),
+        'lat': node.data('primaryLocation.lat'),
+        'long': node.data('primaryLocation.long')
+      };
+      break;
+    default:
+      throw new Error('type is not defined: ' + node.data('type'));
+  }
+  return (tooltip);
+}
 
 export function createToolTip(cy) {
-  
+
   cy.nodes().forEach(function (node) {
 
-    let tooltip = node_properties(node).tooltip;
+    let tooltip = node_tooltip(node);
 
     let content = {};
     // if ('link' in tooltip) {
@@ -36,13 +95,13 @@ export function createToolTip(cy) {
 
     let lines = [];
     Object.keys(tooltip).forEach(function (key) {
-      if (key != 'label' && tooltip[key] != null){
+      if (key != 'label' && tooltip[key] != null) {
         let val = tooltip[key];
-        lines.push(createCustEl('p', {}, [document.createTextNode(key + ": " + val )]));
+        lines.push(createCustEl('p', {}, [document.createTextNode(key + ": " + val)]));
       }
     });
-    
-      content = createCustEl('p', {}, lines);
+
+    content = createCustEl('p', {}, lines);
     // }
 
     var tippy = makeTippy(createCustEl('div', {}, []), content, node);

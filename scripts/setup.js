@@ -20,11 +20,14 @@
 
 import { hideAllTippies, createToolTip } from './tootips.js';
 import { makeSliders } from './sliders.js';
-import { applyStyle, makeLayout } from './layout.js';
+import { makeLayout } from './layout.js';
+import { applyStyle } from './style.js';
 import { groupNodes } from './groups.js';
 
 export var cy = {};
 export var headless;
+
+
 
 
 export function setup(data, headless, elementId) {
@@ -56,7 +59,7 @@ export function setup(data, headless, elementId) {
       groups: data.groups,
       flags: data.flags
      },
-
+    
     // initial viewport state:
     zoom: 1,
     pan: { x: 0, y: 0 },
@@ -109,7 +112,8 @@ export function setup(data, headless, elementId) {
   cy.ready(function () {
     console.debug("Instance ready")
 
-    cy.batch(applyStyle);
+    const graphStyle = function(cy){applyStyle(cy)}.bind(this,cy);
+    cy.batch(graphStyle);
     console.debug("Style applied");
 
     // removeSpinner();

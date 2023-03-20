@@ -1,0 +1,89 @@
+[
+    {
+        "selector": "node",
+        "style": {
+            "font-size": "25px",
+            "font-style": "normal",
+            "text-wrap": "wrap",
+            "text-justification": "center",
+            "text-max-width": "1075px",
+            "font-family": "FontAwesome, Arial, Helvetica, sans-serif",
+            "width": 40,
+            "height": 40,
+            "label": "Node"
+        }
+    },
+    {
+        "selector": "node[type = 'EconomicResource'][?origin]",
+        "style": {
+            "background-color": "#e34a33",
+            "shape": "ellipse"
+        }
+    },
+    {
+        "selector": "node[type = 'EconomicResource'][!origin]",
+        "style": {
+            "background-color": "#8980F5",
+            "shape": "ellipse"
+        }
+    },
+    {
+        "selector": "node[type = 'EconomicEvent']",
+        "style": {
+            "background-color": "#FFEEDD",
+            "shape": "rectangle"
+        }
+    },
+    {
+        "selector": "node[type = 'EconomicEvent'][name = 'transfer']",
+        "style": {
+            "background-color": "#D6D6D6"
+        }
+    },
+    {
+        "selector": "node[type = 'EconomicEvent'][name = 'transferCustody']",
+        "style": {
+            "background-color": "#D6D6D6"
+        }
+    },
+    {
+        "selector": "node[type = 'EconomicEvent'][name = 'transferAllRights']",
+        "style": {
+            "background-color": "#D6D6D6"
+        }
+    },
+    {
+        "selector": "node[type = 'Process']",
+        "style": {
+            "background-color": "#21897E",
+            "shape": "diamond"
+        }
+    },
+    {
+        "selector": "node[type = 'ProcessGroup']",
+        "style": {
+            "background-color": "#21897E",
+            "shape": "diamond"
+        }
+    },
+    {
+        "selector": "node[type = 'Person']",
+        "style": {
+            "background-color": "#000000",
+            "shape": "triangle"
+        }
+    },
+    {
+        "selector": "edge",
+        "style": {
+            "width": 3,
+            "label": "edge",
+            "font-size": "10px",
+            "font-style": "oblique",
+            "line-color": "#969696",
+            "target-arrow-color": "#969696",
+            "target-arrow-shape": "triangle",
+            "curve-style": "bezier"
+        }
+    }
+]
