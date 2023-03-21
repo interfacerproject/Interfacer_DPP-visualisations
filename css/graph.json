@@ -2,7 +2,7 @@
     {
         "selector": "node",
         "style": {
-            "font-size": "25px",
+            "font-size": "20px",
             "font-style": "normal",
             "text-wrap": "wrap",
             "text-justification": "center",
@@ -63,7 +63,8 @@
         "selector": "node[type = 'ProcessGroup']",
         "style": {
             "background-color": "#21897E",
-            "shape": "diamond"
+            "shape": "diamond",
+            "opacity": 0.8
         }
     },
     {
@@ -77,13 +78,18 @@
         "selector": "edge",
         "style": {
             "width": 3,
-            "label": "edge",
             "font-size": "10px",
             "font-style": "oblique",
             "line-color": "#969696",
             "target-arrow-color": "#969696",
             "target-arrow-shape": "triangle",
             "curve-style": "bezier"
+        }
+    },
+    {
+        "selector": "[?grouped]",
+        "style": {
+            "opacity": 0.5
         }
     }
 ]

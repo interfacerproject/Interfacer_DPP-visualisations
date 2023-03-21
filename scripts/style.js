@@ -47,22 +47,23 @@ function make_label(node) {
     return label;
 }
 
-
+export function getStyle() {
+    return fetch('./css/graph.json')
+    .then(
+        res => res.json()
+    )
+    .then(function(resjson){
+        for(var slc of resjson){
+            if( slc.selector == 'node'){
+                slc.style.label = function(ele){return make_label(ele)};
+                break;
+            }
+        }
+        return (resjson)
+    })
+}
 
 export function applyStyle(cy) {
-    fetch('./css/graph.json')
-        .then(
-            res => res.json()
-        )
-        .then(function(resjson){
-            for(var slc of resjson){
-                if( slc.selector == 'node'){
-                    slc.style.label = function(ele){return make_label(ele)};
-                    break;
-                }
-            }
-            return (resjson)
-        })
-        .then(resjson => cy.style().fromJson(resjson).update()
-        )
+    getStyle()
+    .then(resjson => cy.style().fromJson(resjson).update())
 }

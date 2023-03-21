@@ -21,7 +21,7 @@
 import { hideAllTippies, createToolTip } from './tootips.js';
 import { makeSliders } from './sliders.js';
 import { makeLayout } from './layout.js';
-import { applyStyle } from './style.js';
+import { getStyle, applyStyle } from './style.js';
 import { groupNodes } from './groups.js';
 
 export var cy = {};
@@ -47,97 +47,103 @@ export function setup(data, headless, elementId) {
   } else {
     container = document.getElementById(elementId);
   }
-
-  cy = cytoscape({
-
-
-    container: container, // container to render in
-
-    elements: data.elements,
-
-    data: { 
-      groups: data.groups,
-      flags: data.flags
-     },
-    
-    // initial viewport state:
-    zoom: 1,
-    pan: { x: 0, y: 0 },
-
-    // interaction options:
-    minZoom: 1e-50,
-    maxZoom: 1e50,
-    zoomingEnabled: true,
-    userZoomingEnabled: true,
-    panningEnabled: true,
-    userPanningEnabled: true,
-    boxSelectionEnabled: true,
-    selectionType: 'single',
-    touchTapThreshold: 8,
-    desktopTapThreshold: 4,
-    autolock: false,
-    autoungrabify: false,
-    autounselectify: false,
-
-    // rendering options:
-    headless: headless,
-    styleEnabled: true,
-    hideEdgesOnViewport: false,
-    textureOnViewport: false,
-    motionBlur: false,
-    motionBlurOpacity: 0.2,
-    // wheelSensitivity: 1, //Do not set it, cytoscape complains
-    pixelRatio: 'auto'
-
-  });
+  // fetch the style file and then create cytoscape object
+  getStyle().then(style => {
+    cy = cytoscape({
 
 
+      container: container, // container to render in
 
-  cy.on('tap', function (e) {
-    if (e.target === cy) {
+      elements: data.elements,
+
+      data: {
+        groups: data.groups,
+        flags: data.flags
+      },
+
+      // initial viewport state:
+      zoom: 1,
+      pan: { x: 0, y: 0 },
+
+      style: style,
+      // interaction options:
+      minZoom: 1e-50,
+      maxZoom: 1e50,
+      zoomingEnabled: true,
+      userZoomingEnabled: true,
+      panningEnabled: true,
+      userPanningEnabled: true,
+      boxSelectionEnabled: true,
+      selectionType: 'single',
+      touchTapThreshold: 8,
+      desktopTapThreshold: 4,
+      autolock: false,
+      autoungrabify: false,
+      autounselectify: false,
+
+      // rendering options:
+      headless: headless,
+      styleEnabled: true,
+      hideEdgesOnViewport: false,
+      textureOnViewport: false,
+      motionBlur: false,
+      motionBlurOpacity: 0.2,
+      // wheelSensitivity: 1, //Do not set it, cytoscape complains
+      pixelRatio: 'auto'
+
+    });
+
+
+
+    cy.on('tap', function (e) {
+      if (e.target === cy) {
+        hideAllTippies(cy);
+      }
+    });
+
+    cy.on('tap', 'edge', function (e) {
       hideAllTippies(cy);
-    }
-  });
+    });
 
-  cy.on('tap', 'edge', function (e) {
-    hideAllTippies(cy);
-  });
-
-  cy.on('zoom pan', function (e) {
-    hideAllTippies(cy);
-  });
+    cy.on('zoom pan', function (e) {
+      hideAllTippies(cy);
+    });
 
 
 
-  cy.ready(function () {
-    console.debug("Instance ready")
+    cy.ready(function () {
+      console.debug("Instance ready")
 
-    const graphStyle = function(cy){applyStyle(cy)}.bind(this,cy);
-    cy.batch(graphStyle);
-    console.debug("Style applied");
+      // We have set the style at creation, it seems to have better
+      // performances as doing it here first show a graph with no
+      // style applied
+      // const graphStyle = function(cy){applyStyle(cy)}.bind(this,cy);
+      // cy.batch(graphStyle);
+      // console.debug("Style applied");
 
-    // removeSpinner();
+      // removeSpinner();
 
-    // makeSliders(cntr_minmax[cntr_names[0]], weight_minmax, date_minmax);
+      // makeSliders(cntr_minmax[cntr_names[0]], weight_minmax, date_minmax);
 
 
-    if (headless) {
-      cy.mount(document.getElementById(elementId));
-    }
-    
-    groupNodes(cy);
-    console.debug("Nodes grouped");
-    
-    createToolTip(cy);
-    console.debug("Tooltips added");
+      if (headless) {
+        cy.mount(document.getElementById(elementId));
+      }
 
-    makeLayout(cy.elements());
-    console.debug("Layout applied");
-    
-    console.debug("Instance configured");
+      groupNodes(cy);
+      console.debug("Nodes grouped");
 
-  });
+      createToolTip(cy);
+      console.debug("Tooltips added");
 
-  console.log("Setup done")
-  // return (cy);
+      makeLayout(cy.elements());
+      console.debug("Layout applied");
+
+      console.debug("Instance configured");
+
+    });
+
+    console.log("Setup done")
+    // return (cy);
+  })
 }

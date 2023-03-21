@@ -262,7 +262,8 @@ function collapseGroup(eles) {
     aNode.cy().add(eles.grouping);
     aNode.cy().remove(eles.ext_edges);
     eles.grouped.forEach(function (ele) {
-        ele.addClass('collapsed-child');
+        // ele.addClass('collapsed-child');
+        ele.data('grouped', true);
     }
     );
 
@@ -284,7 +285,8 @@ function expandGroup(eles) {
     aNode.cy().remove(eles.grouping);
     aNode.cy().add(eles.ext_edges);
     eles.grouped.forEach(function (ele) {
-        ele.removeClass('collapsed-child');
+        // ele.removeClass('collapsed-child');
+        ele.data('grouped', false);
     }
     );
 
