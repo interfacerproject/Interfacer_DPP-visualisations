@@ -62,3 +62,25 @@ export function addDays(value) {
   return(value * day);
 
 }
+
+export function download(cy, filename) {
+  const options = {
+    full: false,
+    scale: 1,
+    bg: '#FFFFFF'
+  };
+
+  var svgContent = cy.svg(options);
+  // var blob = new Blob([svgContent], {type:"image/svg+xml;charset=utf-8"});
+  var element = document.createElement('a');
+  element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(svgContent));
+  
+  element.setAttribute('download', filename);
+
+  element.style.display = 'none';
+  document.body.appendChild(element);
+
+  element.click();
+
+  document.body.removeChild(element);
+}

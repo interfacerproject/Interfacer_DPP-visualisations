@@ -23,6 +23,7 @@ import { makeSliders } from './sliders.js';
 import { makeLayout } from './layout.js';
 import { getStyle, applyStyle } from './style.js';
 import { groupNodes } from './groups.js';
+import { download } from './utils.js';
 
 export var cy = {};
 export var headless;
@@ -98,6 +99,7 @@ export function setup(data, headless, elementId) {
     cy.on('tap', function (e) {
       if (e.target === cy) {
         hideAllTippies(cy);
+        // download(cy, 'dpp.svg');
       }
     });
 
@@ -138,7 +140,7 @@ export function setup(data, headless, elementId) {
 
       makeLayout(cy.elements());
       console.debug("Layout applied");
-
+            
       console.debug("Instance configured");
 
     });

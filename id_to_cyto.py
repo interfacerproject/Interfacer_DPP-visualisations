@@ -4,7 +4,7 @@ from if_dpp import er_before, get_dpp, convert_bedpp
 from cyto_data import main_no_files
 from if_groups import find_procgrp
 
-ENDPOINT = 'http://zenflows-debug.interfacer.dyne.org/api'
+ENDPOINT = 'https://zenflows-debug.interfacer.dyne.org/api'
 CYTO_FILE = 'dpp.cyto.json'
 
 USERS_DATA = {
@@ -17,25 +17,25 @@ USERS_DATA = {
 }
 
 
-def main(id, do_users, do_server, add_groups, compact):
+def main(id, do_users, do_server, add_groups, compact, endpoint):
 
     print(f"Resource to be traced: {id}")
     visited = set()
 
     if do_server:
-        a_dpp = get_dpp(id, USERS_DATA['designer2'], endpoint=ENDPOINT)
+        a_dpp = get_dpp(id, USERS_DATA['designer2'], endpoint=endpoint)
         a_dpp = a_dpp[0]
         tot_dpp = convert_bedpp(a_dpp)
     else:
         a_dpp = []
         er_before(id, USERS_DATA['designer2'], dpp_children=a_dpp,
-                  depth=0, visited=visited, endpoint=ENDPOINT)
+                  depth=0, visited=visited, endpoint=endpoint)
         tot_dpp = a_dpp[0]
 
     processgrp_data = {}
     if add_groups:
         find_procgrp(tot_dpp, processgrp_data,
-                     USERS_DATA['designer2'], endpoint=ENDPOINT)
+                     USERS_DATA['designer2'], endpoint=endpoint)
     # breakpoint()
     cito_graph = main_no_files(
         tot_dpp, processgrp_data, do_users=do_users, compact=compact)
@@ -70,6 +70,14 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        '-e', '--endpoint',
+        dest='endpoint',
+        action='store',
+        default=ENDPOINT,
+        help='specifies the endpoint we are talking to',
+    )
+
+    parser.add_argument(
         '-i', '--id',
         dest='id',
         action='store',
@@ -98,4 +106,4 @@ if __name__ == "__main__":
         parser.print_help()
         exit(-1)
 
-    main(args.id, args.users, args.do_server, args.add_groups, args.compact)
+    main(args.id, args.users, args.do_server, args.add_groups, args.compact, args.endpoint)

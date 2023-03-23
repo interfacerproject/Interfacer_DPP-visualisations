@@ -32,17 +32,6 @@ import {setup} from './setup.js';
 
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 // TODO
-// 1) FIx interaction between sliders, since
-//    restoring an edge when its ends have been
-//    removed gives an error
-// 2) Size of nodes depending on centrality
-// 3) color of edges depending on weight
-// 4) add to tooltip the centralities 
-//    and maybe other data
-// 5) Implement better layout
-// 6) Add button for lonely nodes
-// 7) Understand browser memory handling
-// 8) Optimize centrality calculation
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 var file = './dpp.cyto.json';

@@ -16,46 +16,46 @@
     {
         "selector": "node[type = 'EconomicResource'][?origin]",
         "style": {
-            "background-color": "#e34a33",
+            "background-color": "#f7f7f7",
             "shape": "ellipse"
         }
     },
     {
         "selector": "node[type = 'EconomicResource'][!origin]",
         "style": {
-            "background-color": "#8980F5",
+            "background-color": "#f7f7f7",
             "shape": "ellipse"
         }
     },
     {
         "selector": "node[type = 'EconomicEvent']",
         "style": {
-            "background-color": "#FFEEDD",
+            "background-color": "#cccccc",
             "shape": "rectangle"
         }
     },
     {
         "selector": "node[type = 'EconomicEvent'][name = 'transfer']",
         "style": {
-            "background-color": "#D6D6D6"
+            "background-color": "#969696"
         }
     },
     {
         "selector": "node[type = 'EconomicEvent'][name = 'transferCustody']",
         "style": {
-            "background-color": "#D6D6D6"
+            "background-color": "#969696"
         }
     },
     {
         "selector": "node[type = 'EconomicEvent'][name = 'transferAllRights']",
         "style": {
-            "background-color": "#D6D6D6"
+            "background-color": "#969696"
         }
     },
     {
         "selector": "node[type = 'Process']",
         "style": {
-            "background-color": "#21897E",
+            "background-color": "#525252",
             "shape": "diamond"
         }
     },
